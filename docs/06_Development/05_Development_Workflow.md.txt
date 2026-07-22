@@ -1,0 +1,450 @@
+Sukhavasam SaaS Engineering Workflow
+
+Version: 1.0
+
+Status: Mandatory
+
+Purpose
+
+This document defines the complete engineering workflow for developing, reviewing, testing, and releasing the Sukhavasam Hospitality SaaS Platform.
+
+It ensures that every change follows a consistent process, maintains architectural integrity, and preserves long-term maintainability.
+
+1. Engineering Principles
+
+Every change must follow these principles:
+
+Architecture First
+Configuration Over Hardcoding
+Service-Oriented Design
+Tenant Isolation
+Test Before Merge
+Documentation Before Release
+Small, Reviewable Changes
+Backward Compatibility
+Security by Default
+AI-Assisted, Human-Reviewed
+2. Development Lifecycle
+
+Every feature follows the same lifecycle.
+
+Requirement
+      ↓
+Architecture Review
+      ↓
+Technical Design
+      ↓
+Development
+      ↓
+Unit Testing
+      ↓
+Integration Testing
+      ↓
+Documentation
+      ↓
+Code Review
+      ↓
+Merge
+      ↓
+Deployment
+
+No step should be skipped.
+
+3. Git Branching Strategy
+Permanent Branches
+main
+develop
+main always contains production-ready code.
+develop contains the latest integrated features.
+Working Branches
+feature/<module>-<feature>
+
+bugfix/<issue>
+
+hotfix/<critical-fix>
+
+refactor/<module>
+
+release/<version>
+
+Examples:
+
+feature/booking-rate-plans
+
+feature/website-page-builder
+
+bugfix/payment-callback
+
+refactor/configuration-engine
+
+release/v1.0.0
+4. Commit Message Convention
+
+Use Conventional Commits.
+
+Examples:
+
+feat(booking): add reservation workflow
+
+fix(payment): verify Razorpay signature
+
+docs(architecture): update booking ERD
+
+refactor(configuration): extract pricing service
+
+test(identity): add permission tests
+
+chore(ci): update GitHub Actions
+
+Types:
+
+feat
+fix
+docs
+refactor
+test
+perf
+style
+build
+ci
+chore
+5. Pull Request Checklist
+
+Before opening a Pull Request, verify:
+
+Feature works as expected.
+Unit tests pass.
+Existing tests still pass.
+No hardcoded configuration.
+Tenant isolation maintained.
+Documentation updated.
+Logging added where appropriate.
+Error handling implemented.
+Performance reviewed.
+No unnecessary dependencies introduced.
+6. Code Review Guidelines
+
+Every review should verify:
+
+Architecture
+Does it follow the documented architecture?
+Is it configuration-driven?
+Is business logic in services?
+Database
+Are relationships normalized?
+Are indexes appropriate?
+Is tenant isolation enforced?
+Security
+Permissions checked?
+Input validated?
+Sensitive data protected?
+Performance
+Avoids N+1 queries?
+Uses pagination?
+Background tasks for long-running work?
+Maintainability
+Clear naming?
+Reusable?
+Documented?
+7. Database Migration Workflow
+
+Migration process:
+
+Modify Models
+      ↓
+Generate Migration
+      ↓
+Review Migration
+      ↓
+Run Tests
+      ↓
+Apply Migration (Development)
+      ↓
+Apply Migration (Staging)
+      ↓
+Apply Migration (Production)
+
+Rules:
+
+Never edit committed migrations.
+One logical change per migration.
+Separate schema and data migrations where possible.
+Back up production before major schema changes.
+8. Feature Flag Rollout
+
+Every major feature should support controlled rollout.
+
+Lifecycle:
+
+Development
+      ↓
+Internal Testing
+      ↓
+Pilot Tenants
+      ↓
+Selected Plans
+      ↓
+All Tenants
+
+This allows safe deployment without affecting all customers.
+
+9. Release Process
+
+Development flow:
+
+feature/*
+      ↓
+develop
+      ↓
+release/*
+      ↓
+staging
+      ↓
+main
+      ↓
+production
+
+Every release requires:
+
+Regression testing
+Documentation updates
+Migration review
+Release notes
+10. Rollback Strategy
+
+Every deployment must support rollback.
+
+Possible rollback methods:
+
+Git revert
+Previous container image
+Database backup
+Feature flag disable
+Configuration rollback
+
+Rollback procedures should be tested periodically.
+
+11. Backup Strategy
+
+Automated backups should include:
+
+PostgreSQL database
+Uploaded media
+Configuration data
+Environment configuration (excluding secrets)
+
+Suggested schedule:
+
+Daily incremental backups
+Weekly full backups
+Monthly archive
+
+Backups should be stored in a separate location.
+
+12. Issue Tracking
+
+Each issue should include:
+
+Title
+Description
+Steps to reproduce
+Expected behaviour
+Actual behaviour
+Module
+Priority
+Labels
+Linked Pull Request
+
+Issue labels:
+
+bug
+
+feature
+
+documentation
+
+security
+
+performance
+
+refactor
+
+technical-debt
+13. Definition of Ready (DoR)
+
+Development should not begin until:
+
+Business requirement is clear.
+Dependencies identified.
+ERD updated (if required).
+API design approved.
+Configuration impact understood.
+14. Definition of Done (DoD)
+
+A task is complete only when:
+
+Functionality implemented.
+Unit tests pass.
+Integration tests pass.
+Documentation updated.
+Feature reviewed.
+Logs verified.
+Permissions enforced.
+No TODO comments remain.
+15. AI-Assisted Development Policy
+
+Since AI will be used extensively during development:
+
+AI may assist with:
+Boilerplate generation
+Unit tests
+Documentation
+Refactoring suggestions
+SQL optimization
+Code reviews
+Architecture validation
+AI must not be relied upon for:
+Security decisions without review
+Database migrations without inspection
+Production deployments
+Business rule changes without documentation
+
+Every AI-generated change must be reviewed before merging.
+
+16. Documentation Workflow
+
+Whenever a feature changes:
+
+Update:
+
+README (if applicable)
+Architecture documentation
+API documentation
+ERD (if schema changed)
+Configuration documentation
+
+Documentation is part of the feature—not an afterthought.
+
+17. Dependency Management
+
+Adding a new package requires checking:
+
+Maintenance status
+License compatibility
+Security history
+Community adoption
+Necessity
+
+Prefer built-in Django functionality when it meets requirements.
+
+18. Security Workflow
+
+Before release:
+
+Run dependency vulnerability checks.
+Review authentication changes.
+Verify permission enforcement.
+Test tenant isolation.
+Validate file upload restrictions.
+Review secrets management.
+19. Performance Workflow
+
+For significant features:
+
+Measure query counts.
+Benchmark response times.
+Review caching opportunities.
+Move expensive operations to background tasks.
+Verify scalability under expected load.
+20. Release Versioning
+
+Use Semantic Versioning.
+
+Major.Minor.Patch
+
+Examples:
+
+1.0.0
+
+1.1.0
+
+1.1.2
+
+2.0.0
+21. Architecture Decision Records (ADR)
+
+Major technical decisions require an ADR before implementation.
+
+Examples:
+
+ADR-001 Use PostgreSQL
+
+ADR-002 UUID Primary Keys
+
+ADR-003 Headless CMS
+
+ADR-004 Event-Driven Notifications
+
+Store ADRs in:
+
+docs/05_ADR/
+22. Development Checklist
+
+Every feature should answer:
+
+Is it configuration-driven?
+Is it tenant-aware?
+Is it documented?
+Is it testable?
+Is it reusable?
+Does it follow coding standards?
+Does it maintain backward compatibility?
+
+If any answer is "No", revisit the design before implementation.
+
+23. Emergency Procedures
+
+Critical production issues follow this process:
+
+Confirm issue.
+Assess impact.
+Create hotfix branch.
+Apply minimal fix.
+Test.
+Deploy.
+Monitor.
+Document root cause.
+Create follow-up improvement task.
+24. Continuous Improvement
+
+After each release:
+
+Review incidents.
+Capture lessons learned.
+Update documentation.
+Refine coding standards.
+Improve architecture where necessary through ADRs.
+25. Final Workflow Summary
+Requirement
+      ↓
+Architecture
+      ↓
+Design
+      ↓
+Development
+      ↓
+Testing
+      ↓
+Documentation
+      ↓
+Review
+      ↓
+Merge
+      ↓
+Release
+      ↓
+Monitoring
+      ↓
+Continuous Improvement
+
+This workflow applies to every module, from common through ai.

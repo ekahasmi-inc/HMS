@@ -1,0 +1,423 @@
+Purpose
+
+This document defines the highest level database architecture. It does not list every table or field. Instead, it defines the core domains and how they relate.
+
+1. Master Database Philosophy
+
+The database is designed around three principles:
+
+Multi-tenant by design
+Configuration-driven instead of hardcoded
+Modular business domains
+
+Every module must satisfy these principles.
+
+2. Database Domains
+
+The platform is divided into independent domains.
+
+SaaS Platform
+
+│
+
+├── Core Platform
+
+├── Identity
+
+├── Tenant
+
+├── Website Builder
+
+├── Configuration
+
+├── Booking Engine
+
+├── PMS
+
+├── CRM
+
+├── Inventory
+
+├── Restaurant
+
+├── Finance
+
+├── Marketing
+
+├── Analytics
+
+├── AI
+
+└── Integrations
+
+Each domain will eventually become a Django app.
+
+3. Master Entity Relationship
+Platform
+
+│
+
+├── Subscription Plans
+
+│
+
+└── Tenant
+        │
+        │
+        ├── Resort
+        │
+        ├── Users
+        │
+        ├── Website
+        │
+        ├── Configuration
+        │
+        ├── Bookings
+        │
+        ├── Guests
+        │
+        ├── Payments
+        │
+        ├── Inventory
+        │
+        ├── Restaurant
+        │
+        ├── CRM
+        │
+        ├── Marketing
+        │
+        ├── Analytics
+        │
+        └── AI
+4. Core SaaS Layer
+
+The Core SaaS layer is responsible for platform management.
+
+Platform
+
+│
+
+├── SubscriptionPlan
+
+├── Feature
+
+├── Module
+
+├── Theme
+
+├── Template
+
+└── SystemConfiguration
+
+This layer is controlled only by the SaaS administrator.
+
+5. Tenant Layer
+
+Every subscriber creates exactly one tenant.
+
+Tenant
+
+│
+
+├── Resort
+
+├── Subscription
+
+├── Domain
+
+├── Theme
+
+├── Configuration
+
+├── Staff
+
+└── Owner
+
+All operational data belongs to a tenant.
+
+6. Identity Layer
+Tenant
+
+│
+
+├── Users
+
+│
+
+├── Roles
+
+│
+
+├── Permissions
+
+│
+
+└── Audit Logs
+
+Every user belongs to one tenant (for v1). The design should allow future support for users managing multiple properties.
+
+7. Website Layer
+Website
+
+│
+
+├── Pages
+
+├── Sections
+
+├── Components
+
+├── Media
+
+├── SEO
+
+├── Navigation
+
+└── Forms
+
+The Website module never stores presentation directly in templates; it stores structure and content in the database.
+
+8. Configuration Layer
+Configuration
+
+│
+
+├── Theme
+
+├── Feature Flags
+
+├── Business Rules
+
+├── Pricing Rules
+
+├── Workflow Rules
+
+├── Notification Rules
+
+└── Dashboard Preferences
+
+This layer controls platform behavior.
+
+9. Booking Domain
+Bookings
+
+│
+
+├── Availability
+
+├── Room Types
+
+├── Rooms
+
+├── Rate Plans
+
+├── Seasons
+
+├── Reservations
+
+├── Guests
+
+├── Payments
+
+├── Invoices
+
+└── Refunds
+
+The Booking domain manages the complete reservation lifecycle.
+
+10. PMS Domain
+PMS
+
+│
+
+├── Check-in
+
+├── Check-out
+
+├── Housekeeping
+
+├── Maintenance
+
+├── Room Status
+
+├── Tasks
+
+└── Lost & Found
+11. CRM Domain
+CRM
+
+│
+
+├── Guest Profile
+
+├── Preferences
+
+├── Communication
+
+├── Loyalty
+
+├── Feedback
+
+└── Reviews
+12. Inventory Domain
+Inventory
+
+│
+
+├── Categories
+
+├── Items
+
+├── Suppliers
+
+├── Purchase Orders
+
+├── Stock Ledger
+
+├── Consumption
+
+└── Stock Audit
+13. Restaurant Domain
+Restaurant
+
+│
+
+├── Menu
+
+├── Recipes
+
+├── Orders
+
+├── Tables
+
+├── Kitchen Queue
+
+└── Bills
+14. Finance Domain
+Finance
+
+│
+
+├── Invoice
+
+├── Payments
+
+├── Expenses
+
+├── Income
+
+├── Taxes
+
+├── Ledger
+
+└── Reports
+15. Marketing Domain
+Marketing
+
+│
+
+├── Campaigns
+
+├── Blogs
+
+├── Email Templates
+
+├── WhatsApp Templates
+
+├── Coupons
+
+└── Landing Pages
+16. AI Domain
+AI
+
+│
+
+├── Prompt Library
+
+├── Generated Content
+
+├── SEO Suggestions
+
+├── Pricing Suggestions
+
+├── Marketing Suggestions
+
+└── Automation Rules
+17. Analytics Domain
+Analytics
+
+│
+
+├── Occupancy
+
+├── Revenue
+
+├── Booking Sources
+
+├── Customer Insights
+
+├── Dashboard Metrics
+
+└── Forecasts
+18. Integration Domain
+Integrations
+
+│
+
+├── Razorpay
+
+├── Email
+
+├── SMS
+
+├── WhatsApp
+
+├── Google Maps
+
+├── OTA
+
+└── AI Providers
+19. Cross-Domain Rules
+
+Every business table should inherit common audit fields from a shared base model rather than duplicating them.
+
+Required common fields:
+
+Primary key
+Tenant reference (where applicable)
+Created timestamp
+Updated timestamp
+Created by
+Updated by
+Active/archived status (where applicable)
+
+This provides consistent auditing and simplifies future maintenance.
+
+20. Master Relationship Summary
+Platform
+
+↓
+
+Tenant
+
+↓
+
+Configuration
+
+↓
+
+Website
+
+↓
+
+Business Modules
+
+↓
+
+Reporting
+
+↓
+
+AI & Automation
+
+Each lower layer depends only on the layers above it, helping keep the architecture modular.

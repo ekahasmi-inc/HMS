@@ -1,0 +1,572 @@
+Website Builder ERD
+Version 1.0
+Purpose
+
+This module is responsible for generating every customer-facing digital experience.
+
+Examples:
+
+Resort Website
+Landing Pages
+Blog
+Guest Portal
+Event Pages
+Restaurant Pages
+Package Pages
+Offer Pages
+
+All generated from the same database.
+
+1. Website Architecture
+
+One tenant can own multiple websites in the future.
+
+Example
+
+Tenant
+
+│
+
+├── Main Website
+
+├── Event Website
+
+├── Staff Portal
+
+└── Guest Portal
+
+Version 1 may expose only one public website.
+
+2. Master Relationship
+Tenant
+
+↓
+
+Website
+
+↓
+
+Site
+
+↓
+
+Pages
+
+↓
+
+Sections
+
+↓
+
+Components
+
+↓
+
+Content
+
+↓
+
+Media
+3. Core Website Entities
+Entity	Purpose
+Website	Website instance
+Site	Website configuration
+Navigation	Menus
+Page	Individual pages
+PageVersion	Draft & published pages
+Section	Layout blocks
+Component	Reusable UI elements
+ComponentInstance	Component configuration
+ContentBlock	Text, images, videos, etc.
+MediaReference	Asset linkage
+SEOProfile	Search engine optimization
+Redirect	URL redirects
+FormReference	Contact, booking, enquiry forms
+4. Website
+
+Represents one website.
+
+Future support:
+
+Main Website
+
+Guest Portal
+
+Mobile Web
+
+Kiosk
+
+Relationship
+
+Tenant
+
+↓
+
+Website
+
+↓
+
+Site
+5. Site
+
+Stores website-level settings.
+
+Examples:
+
+Site Name
+Logo
+Domain
+Language
+Theme
+Homepage
+Maintenance Mode
+6. Navigation
+
+Relationship
+
+Site
+
+↓
+
+Navigation
+
+↓
+
+Menu Items
+
+Supports:
+
+Header
+Footer
+Mobile Menu
+Sidebar
+Mega Menu
+
+Future:
+
+Nested menus.
+
+7. Pages
+
+Examples
+
+Home
+
+Rooms
+
+Gallery
+
+Restaurant
+
+Packages
+
+Wedding
+
+Nearby Attractions
+
+About
+
+Contact
+
+Privacy Policy
+
+Each page contains metadata but no presentation logic.
+
+8. Page Versioning
+
+Every page supports:
+
+Draft
+
+↓
+
+Review
+
+↓
+
+Published
+
+↓
+
+Archived
+
+Editors can work safely without affecting the live site.
+
+9. Sections
+
+A page is composed of sections.
+
+Example
+
+Homepage
+
+│
+
+├── Hero
+
+├── Amenities
+
+├── Rooms
+
+├── Gallery
+
+├── Reviews
+
+├── Restaurant
+
+├── Packages
+
+├── Contact
+
+Section stores:
+
+Order
+Visibility
+Background
+Layout
+Configuration
+10. Component Library
+
+Sections contain components.
+
+Examples
+
+Image Slider
+
+Room Card
+
+Gallery Grid
+
+Video Banner
+
+Map
+
+Timeline
+
+Accordion
+
+Pricing Table
+
+Booking Widget
+
+Review Card
+
+Offer Banner
+
+Statistics
+
+Countdown
+
+Button Group
+
+A component is reusable across all websites.
+
+11. Component Instance
+
+The same component can appear multiple times.
+
+Example
+
+Hero
+
+↓
+
+Homepage
+
+↓
+
+Luxury Stay
+
+
+Hero
+
+↓
+
+Wedding Page
+
+↓
+
+Destination Wedding
+
+Different configuration.
+
+Same component.
+
+12. Content Blocks
+
+Content is independent from components.
+
+Types:
+
+Rich Text
+Heading
+Image
+Video
+Gallery
+Button
+Icon
+HTML (restricted)
+Markdown (future)
+
+This allows content reuse.
+
+13. Media Library
+
+Central media storage.
+
+Assets:
+
+Images
+Videos
+PDFs
+Documents
+Logos
+Icons
+
+Referenced by:
+
+Website
+Rooms
+Blogs
+Restaurant
+Marketing
+
+Media is never duplicated.
+
+14. SEO Profile
+
+Each page has an SEO profile.
+
+Stores:
+
+Meta Title
+Meta Description
+Canonical URL
+Open Graph
+Twitter Card
+Schema.org
+Robots
+Sitemap
+
+This keeps SEO separate from content.
+
+15. URL Management
+
+Every page has:
+
+Slug
+
+↓
+
+Route
+
+↓
+
+SEO URL
+
+Supports redirects.
+
+Example:
+
+/rooms
+
+↓
+
+/luxury-rooms
+
+Without breaking links.
+
+16. Dynamic Forms
+
+Pages reference forms rather than embedding fields.
+
+Examples:
+
+Contact
+Booking
+Wedding Enquiry
+Corporate Booking
+Restaurant Reservation
+
+Forms are managed by the Configuration module.
+
+17. Personalization (Future)
+
+Future capability:
+
+Guest
+
+↓
+
+Returning Visitor
+
+↓
+
+Show Special Offer
+
+Rules may be based on:
+
+Device
+Location
+Campaign
+Language
+Referral Source
+18. Multi-language Support
+
+Instead of duplicating pages:
+
+Page
+
+↓
+
+Translations
+
+Future languages:
+
+English
+Hindi
+Marathi
+Arabic
+19. Website Publishing
+
+Publishing workflow:
+
+Draft
+
+↓
+
+Preview
+
+↓
+
+Approval
+
+↓
+
+Publish
+
+↓
+
+Rollback
+
+Each publication is versioned.
+
+20. Cross-Module Integration
+
+The Website Builder integrates with:
+
+Booking Engine (availability widgets)
+CRM (forms and lead capture)
+Marketing (landing pages)
+Blog
+AI (content generation)
+Media Library
+Theme Engine
+SEO Engine
+
+It should not duplicate data already managed by another module.
+
+21. Relationship Summary
+Tenant
+
+↓
+
+Website
+
+↓
+
+Site
+
+↓
+
+Navigation
+
+↓
+
+Pages
+
+↓
+
+Sections
+
+↓
+
+Component Instances
+
+↓
+
+Content Blocks
+
+↓
+
+Media References
+
+Presentation is assembled dynamically from these relationships.
+
+22. Headless CMS Principle
+
+The Website Builder stores:
+
+Structure
+Content
+Relationships
+
+It does not store HTML layouts in the database.
+
+Templates remain responsible for rendering.
+
+This separation allows future channels (mobile, kiosks, guest portals) to reuse the same content.
+
+23. Future Expansion
+
+This architecture is designed to support:
+
+White-label websites
+Multi-property brands
+Guest portals
+Progressive Web Apps
+Mobile applications
+Digital signage
+AI-generated landing pages
+Event microsites
+
+without redesigning the schema.
+
+Final Website Builder Architecture
+Tenant
+
+↓
+
+Website
+
+↓
+
+Site
+
+↓
+
+Navigation
+
+↓
+
+Page
+
+↓
+
+Section
+
+↓
+
+Component Instance
+
+↓
+
+Content Block
+
+↓
+
+Media
+
+↓
+
+SEO

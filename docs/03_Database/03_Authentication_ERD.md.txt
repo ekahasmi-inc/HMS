@@ -1,0 +1,514 @@
+Authentication & Identity ERD
+
+Version: 1.0
+
+Purpose
+
+Defines authentication, authorization, identity, staff management, and access control for the Sukhavasam SaaS platform.
+
+1. Authentication Philosophy
+
+Authentication answers:
+
+Who is the user?
+
+Authorization answers:
+
+What is the user allowed to do?
+
+These are separate concerns.
+
+2. Identity Architecture
+Platform
+
+│
+
+└── Tenant
+
+      │
+
+      ├── Organization
+
+      │
+
+      ├── Department
+
+      │
+
+      ├── Team
+
+      │
+
+      ├── User
+
+      │
+
+      ├── Role
+
+      │
+
+      ├── Permission Group
+
+      │
+
+      └── Permission
+3. Core Authentication Entities
+Entity	Purpose
+User	Login identity
+UserProfile	Personal details
+Organization	Business hierarchy (future multi-property support)
+Department	Functional grouping
+Team	Working group
+Role	Job function
+PermissionGroup	Collection of permissions
+Permission	Atomic capability
+UserRole	User ↔ Role mapping
+RolePermission	Role ↔ Permission mapping
+UserPermission	Direct permission override
+Session	Active login sessions
+LoginHistory	Login audit
+APIKey	API authentication
+Device	Trusted devices
+AuditLog	Security auditing
+4. User
+
+Represents a person.
+
+The User table should contain only identity information.
+
+Examples:
+
+Email
+Password Hash
+Status
+Authentication Method
+
+Do not store employee information here.
+
+5. User Profile
+
+Stores personal information.
+
+Examples:
+
+Name
+Photo
+Phone
+Address
+DOB
+Emergency Contact
+
+Keeping profile separate allows authentication to remain lightweight.
+
+6. Organization
+
+Future-proofing for:
+
+Hotel Group
+
+↓
+
+Resort A
+
+↓
+
+Resort B
+
+↓
+
+Resort C
+
+Version 1:
+
+One tenant owns one organization.
+
+Future:
+
+One organization owns many resorts.
+
+7. Department
+
+Examples
+
+Reception
+
+Housekeeping
+
+Restaurant
+
+Kitchen
+
+Finance
+
+Marketing
+
+Maintenance
+
+Departments help assign workflows and permissions.
+
+8. Team
+
+Teams are optional operational groups.
+
+Examples:
+
+Morning Reception
+
+Night Reception
+
+Kitchen Team A
+
+Housekeeping Team
+
+Useful for scheduling and task assignment.
+
+9. Role
+
+Roles describe responsibilities.
+
+Examples
+
+Owner
+
+General Manager
+
+Receptionist
+
+Housekeeping
+
+Chef
+
+Accountant
+
+Marketing Executive
+
+Inventory Manager
+
+A role is not a permission.
+
+A role groups permissions.
+
+10. Permission
+
+A permission represents one action.
+
+Examples
+
+booking.view
+
+booking.create
+
+booking.update
+
+booking.cancel
+
+room.update
+
+room.delete
+
+payment.refund
+
+inventory.consume
+
+website.publish
+
+theme.edit
+
+reports.export
+
+Permission naming convention:
+
+module.action
+
+Never:
+
+CanEditBooking
+
+Always:
+
+booking.update
+11. Permission Groups
+
+Permissions should be grouped.
+
+Example
+
+Booking Manager
+
+↓
+
+booking.view
+
+booking.create
+
+booking.update
+
+booking.cancel
+
+Another:
+
+Website Editor
+
+↓
+
+page.edit
+
+page.publish
+
+seo.edit
+
+menu.edit
+12. Role Assignment
+
+Relationship
+
+Role
+
+↓
+
+Permission Group
+
+↓
+
+Permissions
+
+Then:
+
+User
+
+↓
+
+Role
+
+This avoids assigning hundreds of permissions directly to users.
+
+13. Direct Permission Override
+
+Sometimes an individual user needs an exception.
+
+Example
+
+Receptionist
+
++
+
+payment.refund
+
+Without creating a new role.
+
+Priority:
+
+Role
+
+↓
+
+Permission Group
+
+↓
+
+User Override
+14. Authentication Methods
+
+Supported:
+
+Email + Password
+Mobile OTP (future)
+Google Login (future)
+Microsoft Login (future)
+
+Users may have multiple authentication methods.
+
+15. Session Management
+
+Track every active session.
+
+Stores:
+
+Login time
+IP
+Device
+Browser
+Expiry
+Logout time
+
+Allows administrators to terminate sessions.
+
+16. Trusted Devices
+
+Stores known devices.
+
+Examples:
+
+Reception PC
+
+Owner Laptop
+
+Manager Mobile
+
+Can support future MFA and device approval.
+
+17. Login History
+
+Every login attempt should be stored.
+
+Tracks:
+
+Success
+Failure
+Timestamp
+IP
+Device
+Reason for failure
+
+Supports security monitoring.
+
+18. API Authentication
+
+Future integrations require API credentials.
+
+Entities:
+
+API Client
+
+↓
+
+API Key
+
+↓
+
+Scopes
+
+↓
+
+Rate Limits
+
+This allows:
+
+Mobile apps
+OTA integrations
+Third-party tools
+
+without sharing user passwords.
+
+19. Audit Log
+
+Every important action should be recorded.
+
+Examples:
+
+Booking deleted
+User created
+Website published
+Price changed
+Refund processed
+
+Each log should capture:
+
+User
+Action
+Target entity
+Timestamp
+Previous value (when practical)
+New value (when practical)
+20. Permission Resolution
+
+Access should be evaluated in this order:
+
+System
+
+↓
+
+Subscription
+
+↓
+
+Feature Enabled
+
+↓
+
+Role
+
+↓
+
+Permission Group
+
+↓
+
+User Override
+
+Access is granted only if every required layer permits it.
+
+21. Cross-Module Relationships
+
+Identity integrates with:
+
+Booking
+Website Builder
+Configuration
+CRM
+Inventory
+Finance
+Restaurant
+AI
+Marketing
+
+No module should implement its own authentication.
+
+22. Security Policies
+
+Recommended policies:
+
+Password hashing using Django's built-in password framework
+Configurable password rules
+Account lockout after repeated failures
+Optional MFA (future)
+Session expiration
+CSRF protection
+Secure cookies
+Permission checks at service and API layers
+23. Future Expansion
+
+The identity system should support:
+
+Multi-property operators
+Franchise organizations
+External vendors
+Guests with portal access
+Corporate clients
+Travel agents
+API consumers
+
+without changing the core authentication model.
+
+Authentication Relationship Summary
+Tenant
+
+↓
+
+Organization
+
+↓
+
+Department
+
+↓
+
+Team
+
+↓
+
+User
+
+↓
+
+Role
+
+↓
+
+Permission Group
+
+↓
+
+Permission
+
+Access flows upward through this hierarchy while remaining tenant-isolated.

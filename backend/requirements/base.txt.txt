@@ -1,0 +1,10 @@
+Django
+djangorestframework
+psycopg2-binary
+django-environ
+django-filter
+Pillow
+redis
+celery
+gunicorn
+whitenoise

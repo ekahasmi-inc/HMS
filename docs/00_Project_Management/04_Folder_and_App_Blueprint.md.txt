@@ -1,0 +1,458 @@
+Sukhavasam SaaS - Folder & Application Blueprint
+
+Version: 1.0
+
+Purpose
+
+This document defines the complete repository layout, Django application structure, package organization, dependency rules, and development conventions.
+
+Once implementation begins, this document becomes the standard for every new app and package.
+
+1. Repository Structure
+
+The repository is organized into logical layers instead of technology layers.
+
+sukhavasam-saas/
+│
+├── backend/                    # Django backend
+├── frontend/                   # Future React / Mobile UI
+├── docs/                       # Architecture & documentation
+├── deployment/                 # Docker, Nginx, CI/CD
+├── scripts/                    # Utility scripts
+├── tools/                      # Developer tooling
+├── tests/                      # End-to-end tests
+├── .github/                    # GitHub Actions
+├── .env.example
+├── docker-compose.yml
+├── Makefile
+├── README.md
+└── LICENSE
+2. Backend Structure
+backend/
+│
+├── apps/
+├── config/
+├── shared/
+├── templates/
+├── static/
+├── media/
+├── locale/
+├── logs/
+├── requirements/
+├── manage.py
+└── pyproject.toml
+3. Django Apps
+
+Applications are grouped by business domain.
+
+apps/
+│
+├── common/
+├── tenants/
+├── subscriptions/
+├── licensing/
+├── configuration/
+├── identity/
+├── website/
+├── booking/
+├── pricing/
+├── inventory/
+├── payments/
+├── pms/
+├── crm/
+├── restaurant/
+├── finance/
+├── marketing/
+├── analytics/
+├── ai/
+└── integrations/
+
+Each app should be independently maintainable.
+
+4. Internal App Structure
+
+Every app follows the same layout.
+
+booking/
+│
+├── admin/
+├── api/
+├── apps.py
+├── constants.py
+├── events/
+├── exceptions.py
+├── forms/
+├── management/
+├── migrations/
+├── models/
+├── permissions/
+├── repositories/
+├── selectors/
+├── serializers/
+├── services/
+├── signals/
+├── tasks/
+├── templates/
+├── tests/
+├── urls.py
+├── validators/
+├── views/
+└── __init__.py
+
+No large models.py or views.py files.
+
+5. Model Organization
+
+Split models by domain.
+
+Example:
+
+booking/models/
+│
+├── reservation.py
+├── reservation_room.py
+├── guest.py
+├── room.py
+├── room_type.py
+├── rate_plan.py
+├── inventory.py
+├── payment.py
+├── invoice.py
+└── __init__.py
+
+This keeps each file focused.
+
+6. Shared Package
+
+The shared/ package contains reusable platform utilities.
+
+shared/
+│
+├── base/
+├── database/
+├── events/
+├── exceptions/
+├── middleware/
+├── permissions/
+├── storage/
+├── utils/
+├── validators/
+└── constants/
+
+No business logic belongs here.
+
+7. Config Package
+
+Project configuration lives in one place.
+
+config/
+│
+├── settings/
+│   ├── base.py
+│   ├── development.py
+│   ├── testing.py
+│   ├── staging.py
+│   └── production.py
+│
+├── urls.py
+├── wsgi.py
+├── asgi.py
+└── celery.py
+
+Environment-specific settings inherit from base.py.
+
+8. Environment Management
+
+Use environment variables exclusively.
+
+.env
+
+.env.development
+
+.env.testing
+
+.env.staging
+
+.env.production
+
+Never commit secrets.
+
+9. Requirements Management
+
+Split dependencies.
+
+requirements/
+
+base.txt
+
+development.txt
+
+testing.txt
+
+production.txt
+
+This minimizes production dependencies.
+
+10. API Organization
+
+All APIs live under /api/v1/.
+
+booking/api/
+
+views/
+
+serializers/
+
+urls.py
+
+permissions.py
+
+Versioning enables backward compatibility.
+
+11. Service Layer
+
+Every business operation belongs to a service.
+
+Example:
+
+booking/services/
+
+reservation_service.py
+
+pricing_service.py
+
+payment_service.py
+
+checkin_service.py
+
+Views should orchestrate, not implement business rules.
+
+12. Selector Layer
+
+Selectors contain read queries.
+
+booking/selectors/
+
+reservation_selector.py
+
+inventory_selector.py
+
+guest_selector.py
+
+They centralize complex database reads.
+
+13. Repository Layer
+
+Use repositories for complex write logic when needed.
+
+booking/repositories/
+
+reservation_repository.py
+
+invoice_repository.py
+
+Simple ORM operations can stay within services.
+
+14. Templates
+
+Templates are organized by app.
+
+templates/
+
+website/
+
+booking/
+
+emails/
+
+crm/
+
+shared/
+
+Shared fragments go into templates/shared/.
+
+15. Static Assets
+static/
+
+css/
+
+js/
+
+images/
+
+fonts/
+
+vendor/
+
+App-specific assets can live under each app if necessary but are collected centrally.
+
+16. Media Structure
+
+Organize uploaded content by tenant and purpose.
+
+media/
+└── tenants/
+    └── <tenant_uuid>/
+        ├── branding/
+        ├── rooms/
+        ├── gallery/
+        ├── blogs/
+        ├── invoices/
+        ├── restaurant/
+        ├── documents/
+        └── users/
+
+This simplifies backup, migration, and deletion.
+
+17. Import Rules
+
+To keep modules loosely coupled:
+
+common may be imported by any app.
+shared may be imported by any app.
+Domain apps should not directly import each other's models.
+Cross-module interaction should happen through services or published interfaces.
+Circular imports are not allowed.
+
+Example:
+
+booking
+   │
+   ├── uses ConfigurationService
+   ├── uses PaymentService
+   └── does not import finance.models directly
+18. Dependency Rules
+
+Allowed dependency flow:
+
+common
+   ↓
+tenants
+   ↓
+subscriptions
+   ↓
+configuration
+   ↓
+identity
+   ↓
+website
+   ↓
+booking
+   ↓
+pms
+   ↓
+finance
+   ↓
+crm
+   ↓
+marketing
+   ↓
+analytics
+   ↓
+ai
+
+Dependencies should flow downward only.
+
+19. Naming Conventions
+Apps: booking, crm, website
+Modules: reservation_service.py
+Models: Reservation
+Tables: booking_reservation
+Services: ReservationService
+Selectors: ReservationSelector
+Repositories: ReservationRepository
+Exceptions: ReservationException
+
+Consistency is mandatory.
+
+20. Testing Layout
+
+Tests mirror the app structure.
+
+booking/tests/
+├── models/
+├── services/
+├── selectors/
+├── api/
+├── permissions/
+└── integration/
+
+This makes it easy to locate and maintain tests.
+
+21. Documentation Within Apps
+
+Every app should include:
+
+booking/
+├── README.md
+├── architecture.md
+└── api.md
+
+These documents explain the app's purpose, internal design, and public interfaces.
+
+22. Dependency Injection (Future)
+
+Where practical, services should depend on interfaces rather than concrete implementations.
+
+Example:
+
+NotificationService
+    ↓
+EmailProvider
+WhatsAppProvider
+SMSProvider
+
+This enables provider replacement without changing business logic.
+
+23. Example Development Workflow
+
+When adding a new module:
+
+Create the app.
+Add README and architecture documentation.
+Define models.
+Create migrations.
+Implement selectors.
+Implement services.
+Add serializers.
+Build API/views.
+Add tests.
+Update roadmap and documentation.
+
+No app is complete until documentation and tests are included.
+
+24. Future Ready
+
+The blueprint is designed to support:
+
+Multi-property hospitality groups
+White-label deployments
+Mobile apps
+Public APIs
+Event-driven architecture
+Microservice extraction (if ever needed)
+
+without reorganizing the repository.
+
+25. Final Repository Overview
+sukhavasam-saas/
+│
+├── backend/
+│   ├── apps/
+│   ├── config/
+│   ├── shared/
+│   ├── templates/
+│   ├── static/
+│   ├── media/
+│   ├── locale/
+│   ├── logs/
+│   └── requirements/
+│
+├── docs/
+├── deployment/
+├── frontend/
+├── scripts/
+├── tests/
+└── .github/
+
+This structure gives a clear separation between business domains, shared infrastructure, documentation, and deployment concerns.

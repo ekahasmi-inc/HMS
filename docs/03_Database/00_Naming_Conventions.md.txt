@@ -1,0 +1,23 @@
+Table naming
+
+
+Model naming
+
+
+Primary key strategy (UUID vs BigAutoField)
+
+Foreign key naming
+
+Index naming
+
+Soft delete policy
+
+Audit fields
+
+Timestamp conventions
+
+File/media organization
+
+Enum strategy
+
+JSON field usage guidelines

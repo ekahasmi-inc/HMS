@@ -1,0 +1,475 @@
+Purpose
+
+The Configuration ERD defines how every subscriber customizes the platform without changing code.
+
+Every configurable aspect of the SaaS is represented in the database.
+
+This is the heart of Sukhavasam SaaS.
+
+1. Configuration Philosophy
+
+The application code provides functionality.
+
+The database determines behavior.
+
+Never:
+
+if resort == "ABC":
+    do_something()
+
+Always:
+
+Read Configuration
+
+↓
+
+Execute Rules
+
+↓
+
+Render Result
+2. Configuration Domains
+Configuration
+
+│
+
+├── Business Settings
+
+├── Website Settings
+
+├── Theme
+
+├── Feature Flags
+
+├── Workflow
+
+├── Pricing Rules
+
+├── Dashboard
+
+├── Notifications
+
+├── Forms
+
+├── Localization
+
+└── Integrations
+3. Master Configuration Relationship
+Tenant
+
+│
+
+├── Configuration Profile
+
+│
+
+├── Theme
+
+│
+
+├── Features
+
+│
+
+├── Business Settings
+
+│
+
+├── Pricing Rules
+
+│
+
+├── Notification Settings
+
+│
+
+├── Dashboard
+
+│
+
+└── Workflows
+
+Each tenant owns exactly one active configuration profile.
+
+4. Core Configuration Entities
+Entity	Purpose
+ConfigurationProfile	Root configuration for tenant
+BusinessSetting	Operational settings
+Theme	Branding
+ThemeVariable	Colors, fonts, spacing
+FeatureFlag	Enable/disable functionality
+Workflow	Business processes
+WorkflowStep	Individual workflow stages
+DashboardLayout	Dashboard structure
+DashboardWidget	Widget definitions
+NotificationTemplate	Email/SMS/WhatsApp templates
+NotificationRule	Trigger-based messaging
+FormDefinition	Dynamic forms
+FormField	Dynamic form fields
+PricingRule	Revenue management rules
+Localization	Currency, timezone, language
+IntegrationSetting	API credentials and third-party settings
+5. ConfigurationProfile
+
+The root entity for tenant configuration.
+
+Relationship:
+
+Tenant
+
+↓
+
+ConfigurationProfile
+
+↓
+
+All Other Configuration
+
+This enables versioning and rollback.
+
+6. Business Settings
+
+Stores operational defaults such as:
+
+Check-in time
+Check-out time
+GST percentage
+Currency
+Timezone
+Cancellation policy
+Booking confirmation policy
+Advance payment requirements
+
+Business rules are data, not code.
+
+7. Theme
+
+Relationship:
+
+ConfigurationProfile
+
+↓
+
+Theme
+
+↓
+
+ThemeVariables
+
+Theme contains branding.
+
+ThemeVariables store configurable values such as:
+
+Primary color
+Secondary color
+Font family
+Border radius
+Button style
+Header layout
+Footer layout
+8. Feature Flags
+
+Relationship:
+
+ConfigurationProfile
+
+↓
+
+FeatureFlag
+
+↓
+
+Module
+
+↓
+
+Feature
+
+Examples:
+
+Online Booking
+
+Enabled
+
+
+Restaurant
+
+Disabled
+
+
+Pool Booking
+
+Enabled
+9. Workflow
+
+Business workflows are configurable.
+
+Relationship:
+
+Workflow
+
+│
+
+├── WorkflowStep
+
+├── WorkflowTransition
+
+└── WorkflowAction
+
+Example:
+
+Reservation
+
+↓
+
+Payment Pending
+
+↓
+
+Payment Received
+
+↓
+
+Confirmed
+
+↓
+
+Checked In
+
+↓
+
+Checked Out
+
+A premium tenant could insert an approval step without code changes.
+
+10. Pricing Rules
+
+Pricing should be entirely rule-driven.
+
+Relationship:
+
+Pricing Rule
+
+↓
+
+Conditions
+
+↓
+
+Actions
+
+Examples:
+
+Weekend surcharge
+Festival pricing
+Occupancy pricing
+Last-minute discount
+Long-stay discount
+Corporate rate
+
+Rules are evaluated in priority order.
+
+11. Dashboard
+
+Relationship:
+
+Dashboard Layout
+
+↓
+
+Dashboard Widget
+
+↓
+
+Widget Configuration
+
+Different roles can have different dashboards.
+
+Example:
+
+Owner Dashboard:
+
+Revenue
+Occupancy
+ADR
+Reviews
+
+Reception Dashboard:
+
+Today's arrivals
+Today's departures
+Pending payments
+12. Notification Engine
+
+Relationship:
+
+Notification Rule
+
+↓
+
+Trigger
+
+↓
+
+Template
+
+↓
+
+Channel
+
+Channels:
+
+Email
+SMS
+WhatsApp
+Push (future)
+
+Triggers:
+
+Booking confirmed
+Payment received
+Check-in today
+Review request
+Birthday
+Membership expiry
+13. Dynamic Forms
+
+Relationship:
+
+FormDefinition
+
+↓
+
+FormField
+
+↓
+
+ValidationRule
+
+Examples:
+
+Booking Form
+
+Contact Form
+
+Wedding Enquiry
+
+Restaurant Reservation
+
+Corporate Booking
+
+Each tenant can enable or disable fields.
+
+14. Localization
+
+Stores:
+
+Language
+Currency
+Timezone
+Date format
+Number format
+Tax rules
+
+Designed for future international expansion.
+
+15. Integration Settings
+
+Each tenant can configure external services independently.
+
+Examples:
+
+Razorpay
+Brevo
+WhatsApp Business
+Google Maps
+Google Analytics
+Meta Pixel
+Cloudinary
+AWS S3
+
+Credentials are encrypted and isolated by tenant.
+
+16. Configuration Inheritance
+
+Configuration is resolved in this order:
+
+System Default
+
+↓
+
+Subscription Plan
+
+↓
+
+Tenant Configuration
+
+↓
+
+User Preference
+
+Later layers override earlier ones.
+
+17. Versioning
+
+Every configuration profile should be versioned.
+
+This enables:
+
+Rollback
+Preview before publishing
+Safe updates
+Audit history
+18. Cross-Module Usage
+
+Every business module references the configuration layer instead of embedding its own settings.
+
+Examples:
+
+Booking reads cancellation rules.
+Website Builder reads theme variables.
+CRM reads communication templates.
+Finance reads tax settings.
+
+This keeps business logic centralized.
+
+19. Future Extensions
+
+The configuration engine should be extensible enough to support future additions without schema redesign, including:
+
+Loyalty programs
+Membership tiers
+OTA-specific rules
+Resort-specific plugins
+Custom automation
+White-label branding
+Final Configuration ERD Summary
+Tenant
+
+↓
+
+ConfigurationProfile
+
+├── Business Settings
+
+├── Theme
+
+├── Theme Variables
+
+├── Feature Flags
+
+├── Workflow
+
+├── Pricing Rules
+
+├── Dashboard
+
+├── Notifications
+
+├── Dynamic Forms
+
+├── Localization
+
+└── Integration Settings
+
+This ERD becomes the configuration backbone of every other module.

@@ -1,0 +1,552 @@
+Purpose
+
+This document defines the database entities that form the foundation of the Sukhavasam SaaS platform.
+
+Every future module depends on these entities.
+
+1. Design Principles
+
+The Core Platform must provide:
+
+Multi-tenancy
+Authentication
+Authorization
+Subscription management
+Feature management
+Configuration
+Theme management
+Media management
+Audit logging
+
+It must not contain Booking, CRM, PMS, Inventory, Restaurant, or Finance data.
+
+2. Core Platform Domains
+Platform
+
+│
+
+├── Identity
+
+├── Tenant
+
+├── Subscription
+
+├── Modules
+
+├── Features
+
+├── Theme
+
+├── Configuration
+
+├── Media
+
+└── Audit
+3. Core Entity Relationship
+Platform
+
+│
+
+├── Subscription Plan
+
+│       │
+
+│       └── Features
+
+│
+
+└── Tenant
+
+        │
+
+        ├── Domain
+
+        ├── Resort
+
+        ├── Users
+
+        ├── Roles
+
+        ├── Theme
+
+        ├── Configuration
+
+        ├── Media
+
+        └── Subscription
+4. Core Tables
+
+The platform foundation consists of nine core entities.
+
+Entity	Purpose
+Tenant	Represents one subscribing business
+Resort	Hospitality business profile
+Domain	Domain and subdomain mapping
+Subscription	Active billing relationship
+SubscriptionPlan	Commercial plan definition
+Module	Functional application modules
+Feature	Individual capabilities within modules
+Theme	Website/dashboard appearance
+Configuration	Tenant-specific settings
+
+These entities should remain small, stable, and reusable.
+
+5. Tenant Domain
+Tenant
+
+Represents one subscriber.
+
+A tenant owns:
+
+Resort
+Website
+Users
+Data
+Configuration
+Subscription
+
+Relationship
+
+Tenant
+
+│
+
+├── Resort
+
+├── Domain
+
+├── Users
+
+├── Subscription
+
+├── Theme
+
+└── Configuration
+
+Business rules:
+
+One tenant has one active resort (v1)
+One tenant has one active subscription
+One tenant can have multiple users
+One tenant can own multiple domains in the future
+6. Resort Domain
+
+The Resort entity stores the business profile.
+
+Contains:
+
+Business identity
+Legal details
+Contact details
+Location
+Branding
+
+Does not store website pages or bookings.
+
+Relationship
+
+Tenant
+
+↓
+
+Resort
+7. Domain Domain
+
+Purpose
+
+Maps incoming HTTP requests to the correct tenant.
+
+Examples
+
+taj.sukhavasam.in
+
+↓
+
+Tenant A
+
+
+
+beachvilla.sukhavasam.in
+
+↓
+
+Tenant B
+
+
+
+www.myresort.com
+
+↓
+
+Tenant B
+
+Business Rules
+
+One primary domain
+Multiple aliases allowed
+SSL status tracked
+DNS verification status tracked
+8. Subscription Domain
+
+Purpose
+
+Tracks customer billing.
+
+Relationship
+
+Tenant
+
+↓
+
+Subscription
+
+↓
+
+Subscription Plan
+
+Tracks
+
+Trial
+Active
+Suspended
+Expired
+Cancelled
+
+Subscription never stores plan features directly.
+
+9. Subscription Plan
+
+Purpose
+
+Commercial pricing model.
+
+Examples
+
+Starter
+
+Professional
+
+Enterprise
+
+Stores
+
+Monthly price
+Annual price
+Trial days
+Limits
+Enabled modules
+10. Module
+
+A module represents a major functional area.
+
+Examples
+
+Website
+
+Booking
+
+CRM
+
+Restaurant
+
+Inventory
+
+Marketing
+
+Finance
+
+Analytics
+
+A module is a container.
+
+11. Feature
+
+Features belong to modules.
+
+Example
+
+Booking Module
+
+│
+
+├── Calendar
+
+├── Coupons
+
+├── Online Payment
+
+├── Dynamic Pricing
+
+└── OTA Sync
+
+Relationship
+
+Module
+
+↓
+
+Feature
+
+Business rule:
+
+A feature belongs to exactly one module.
+
+12. Subscription Feature Matrix
+
+Instead of hardcoding plan capabilities:
+
+Professional Plan
+
+↓
+
+Booking Module
+
+↓
+
+Dynamic Pricing
+
+↓
+
+Enabled
+
+Future plans can enable or disable features without changing code.
+
+13. Tenant Feature Override
+
+Sometimes a feature should be enabled only for one customer.
+
+Relationship
+
+Subscription
+
+↓
+
+Default Features
+
+↓
+
+Tenant Override
+
+Priority
+
+System
+
+↓
+
+Plan
+
+↓
+
+Tenant Override
+
+This avoids creating special code for VIP customers.
+
+14. Theme Domain
+
+Purpose
+
+Controls appearance.
+
+One tenant can install multiple themes but activate one.
+
+Relationship
+
+Tenant
+
+↓
+
+Theme
+
+↓
+
+Color Palette
+
+↓
+
+Typography
+
+↓
+
+Component Style
+15. Configuration Domain
+
+Configuration stores business behavior.
+
+Examples
+
+Check-in Time
+
+GST
+
+Cancellation Policy
+
+Currency
+
+Timezone
+
+Booking Rules
+
+Configuration must never contain presentation.
+
+Presentation belongs to Theme.
+
+16. Media Domain
+
+Purpose
+
+Centralized asset management.
+
+Stores
+
+Images
+Videos
+PDFs
+Logos
+Documents
+
+Every other module references Media rather than storing duplicate file paths.
+
+Media
+
+↓
+
+Website
+
+Rooms
+
+Blogs
+
+Invoices
+
+CRM
+
+Restaurant
+17. Identity Domain
+
+This ERD only establishes the relationship.
+
+Detailed user tables are defined in 03_Authentication_ERD.md.
+
+Relationship
+
+Tenant
+
+↓
+
+Users
+
+↓
+
+Roles
+
+↓
+
+Permissions
+18. Audit Domain
+
+Every important change should be traceable.
+
+Audit records include:
+
+Entity
+Action
+User
+Timestamp
+Previous value
+New value
+
+Supports:
+
+Security
+Compliance
+Troubleshooting
+19. Shared Base Entity
+
+Nearly every business entity should inherit common fields from a shared abstract base model.
+
+Recommended common fields:
+
+Unique ID
+Created timestamp
+Updated timestamp
+Created by
+Updated by
+Status
+Version number (for optimistic locking if needed)
+
+Tenant-specific tables additionally include a tenant reference.
+
+This keeps models consistent and avoids duplication.
+
+20. Platform Relationship Summary
+Platform
+
+│
+
+├── Plans
+
+│      │
+
+│      └── Features
+
+│
+
+├── Tenant
+
+│      │
+
+│      ├── Resort
+
+│      ├── Domain
+
+│      ├── Theme
+
+│      ├── Configuration
+
+│      ├── Media
+
+│      └── Subscription
+
+│
+
+└── Identity
+21. What is intentionally excluded?
+
+This document does not define:
+
+Rooms
+Guests
+Reservations
+Payments
+Invoices
+Inventory
+Restaurant
+CRM
+Marketing
+AI
+Analytics
+
+These are documented in their own ERDs.
+
+Architectural Improvements Before Django
+
+Looking at your long-term goal of building a Cloudbeds/Odoo-like hospitality platform, I recommend expanding the Platform Core slightly before writing any models.
+
+Instead of 9 core entities, I recommend 15 foundational entities:
+
+Domain	Entity
+Tenant	Tenant
+Business	Resort
+Domain	Domain
+Billing	Subscription
+Billing	SubscriptionPlan
+Licensing	Module
+Licensing	Feature
+Configuration	Configuration
+Branding	Theme
+Assets	Media
+Localization	Language
+Localization	Currency
+Localization	TimeZone
+Identity	User (relationship only here)
+Audit	AuditLog

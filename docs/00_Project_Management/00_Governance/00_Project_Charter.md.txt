@@ -1,0 +1,209 @@
+Sukhavasam Hospitality SaaS Platform – Project Charter
+
+Version: 1.0
+Status: Approved (Architecture Baseline)
+Owner: Project Architecture Team
+
+1. Purpose
+
+The Project Charter defines the identity, direction, and governing principles of the Sukhavasam Hospitality SaaS Platform.
+
+It serves as the highest-level document for the project.
+
+Whenever implementation decisions conflict, this charter takes precedence.
+
+2. Vision
+
+To build India's most configurable, scalable, and intelligent hospitality operating platform that enables resorts, hotels, villas, homestays, campgrounds, and future hospitality businesses to manage their complete operations from a single cloud platform.
+
+The platform should allow a hospitality business to:
+
+Build its website.
+Accept direct bookings.
+Manage daily operations.
+Automate marketing.
+Handle finances.
+Deliver exceptional guest experiences.
+Grow without depending on software developers.
+3. Mission
+
+Our mission is to replace fragmented hospitality software with one integrated, configuration-driven platform where subscribers can enable, disable, and customize functionality without changing code.
+
+The platform should evolve continuously while preserving stability and maintainability.
+
+4. Product Scope
+
+The platform includes:
+
+Website Builder
+Booking Engine
+Property Management System (PMS)
+Guest CRM
+Dynamic Pricing
+Payment Integration
+Finance & Billing
+Inventory Management
+Restaurant Management
+Marketing Automation
+Analytics
+AI-powered Operations
+
+The platform excludes:
+
+Custom code for individual subscribers.
+One-off implementations that bypass configuration.
+Business rules hardcoded for specific customers.
+5. Target Customers
+
+Primary:
+
+Beach resorts
+Boutique hotels
+Homestays
+Villas
+Farm stays
+Camping properties
+Eco resorts
+
+Future:
+
+Hotel chains
+Multi-property operators
+Hospitality management companies
+Franchise businesses
+International hospitality brands
+6. Product Philosophy
+
+Every feature must follow these principles:
+
+Configuration over customization.
+Multi-tenant by design.
+Modular architecture.
+Reusable services.
+Business logic outside views.
+Data-driven workflows.
+Secure by default.
+Documentation before implementation.
+Testable architecture.
+Backward compatibility where practical.
+7. Architectural Principles
+
+The platform will follow:
+
+Domain-driven modular design.
+Service-oriented architecture within the monolith.
+Configuration-driven behaviour.
+Event-driven communication where beneficial.
+Strict tenant isolation.
+API-first design.
+Layered architecture (Views → Services → Selectors → Models).
+
+Business modules must never bypass platform services.
+
+8. Non-Functional Requirements
+Performance
+Fast page loads.
+Efficient database queries.
+Background processing for long-running tasks.
+Horizontal scalability where feasible.
+Security
+HTTPS everywhere.
+Secure authentication.
+Role-based access control.
+Tenant isolation.
+Audit logging.
+Secure file handling.
+Reliability
+Automated backups.
+Monitoring.
+Health checks.
+Rollback procedures.
+Disaster recovery planning.
+Maintainability
+Consistent coding standards.
+Modular design.
+Comprehensive documentation.
+Automated testing.
+9. MVP Definition
+
+The first production release (v1.0) will include:
+
+Multi-tenant SaaS
+Subdomain and custom domain support
+Website Builder
+Booking Engine
+Availability Management
+Payment Integration
+Basic PMS
+GST Invoice
+Guest CRM
+Admin Dashboard
+
+The MVP intentionally excludes advanced enterprise features to achieve a stable and timely launch.
+
+10. Success Metrics
+Technical
+Zero tenant data leakage.
+Stable deployment process.
+High automated test coverage.
+Consistent coding standards.
+Business
+New tenant onboarding in minutes.
+Website launch without developer support.
+Direct bookings managed end-to-end.
+Positive subscriber retention.
+11. Decision Framework
+
+When evaluating any feature or change, ask:
+
+Does it align with the vision?
+Is it configuration-driven?
+Does it benefit multiple subscribers?
+Can it scale to thousands of tenants?
+Does it preserve modularity?
+Can it be tested independently?
+Is documentation updated?
+
+If the answer to any critical question is "No", reconsider the design.
+
+12. Documentation Authority
+
+Documents are authoritative in the following order:
+
+Project Charter
+Architecture Documents
+Architecture Decision Records (ADRs)
+Engineering Standards
+Implementation Documents
+Source Code Comments
+
+If conflicts arise, the higher-level document takes precedence.
+
+13. Change Management
+
+Major architectural changes require:
+
+An ADR.
+Review of affected documents.
+Update to the Project Charter if foundational principles change.
+Approval before implementation.
+
+This prevents architectural drift over time.
+
+14. Long-Term Vision
+
+The platform is designed to evolve into a complete Hospitality Operating System, supporting:
+
+Multi-property management
+White-label SaaS
+Public APIs
+Mobile applications
+AI-driven automation
+Marketplace integrations
+Internationalization
+Enterprise deployments
+15. Project Motto
+
+"Build the Platform Once. Configure It Forever."
+
+Every implementation decision should support this philosophy.

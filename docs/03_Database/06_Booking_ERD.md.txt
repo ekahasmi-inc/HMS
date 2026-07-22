@@ -1,0 +1,657 @@
+Purpose
+
+This module manages the complete reservation lifecycle from availability search through check-out, payment, invoicing, cancellation, and guest history.
+
+It is the operational core of the hospitality platform.
+
+1. Booking Philosophy
+
+The system should not think in terms of "bookings."
+
+Instead, think in terms of a reservation lifecycle.
+
+Availability Search
+
+↓
+
+Quotation
+
+↓
+
+Reservation
+
+↓
+
+Payment
+
+↓
+
+Confirmation
+
+↓
+
+Arrival
+
+↓
+
+Check-In
+
+↓
+
+Stay
+
+↓
+
+Check-Out
+
+↓
+
+Invoice
+
+↓
+
+Guest History
+
+Every stage should be traceable.
+
+2. Reservation Domain
+Reservation
+
+│
+
+├── Property
+
+├── Room Type
+
+├── Physical Room
+
+├── Rate Plan
+
+├── Inventory
+
+├── Availability
+
+├── Reservation
+
+├── Reservation Room
+
+├── Guest
+
+├── Add-on
+
+├── Payment
+
+├── Invoice
+
+├── Coupon
+
+├── Cancellation
+
+└── Refund
+3. Core Reservation Entities
+Entity	Purpose
+Property	Resort/Hotel (Tenant's operating property)
+RoomType	Sellable room category
+Room	Physical room
+RatePlan	Pricing strategy
+InventoryCalendar	Daily sellable inventory
+Availability	Search cache / availability
+Reservation	Master booking
+ReservationRoom	Individual room allocation
+Guest	Primary guest
+GuestStay	Occupants staying in rooms
+AddOn	Extra services
+ReservationAddOn	Selected services
+Coupon	Promotional discounts
+Payment	Monetary transactions
+Invoice	Financial document
+Cancellation	Cancellation records
+Refund	Refund records
+ReservationStatusHistory	Reservation audit trail
+4. Property
+
+Supports future multi-property groups.
+
+Tenant
+
+↓
+
+Property
+
+↓
+
+Room Types
+
+↓
+
+Rooms
+
+Version 1:
+
+One property per tenant.
+
+Future:
+
+Many properties.
+
+5. Room Type
+
+A sellable category.
+
+Examples:
+
+Deluxe
+
+Family
+
+Premium Sea View
+
+Villa
+
+Dormitory
+
+Stores:
+
+Capacity
+Base occupancy
+Maximum occupancy
+Standard amenities
+Images
+Description
+
+Does not store inventory.
+
+6. Physical Room
+
+Represents an actual room.
+
+Example:
+
+101
+
+102
+
+103
+
+104
+
+Stores:
+
+Room Number
+Floor
+Status
+Maintenance State
+Housekeeping State
+
+Relationship:
+
+Room Type
+
+↓
+
+Room
+7. Rate Plans
+
+Pricing should never be hardcoded.
+
+Examples:
+
+Standard
+
+Non-refundable
+
+Breakfast Included
+
+Corporate
+
+Weekend Offer
+
+Long Stay
+
+A reservation selects a rate plan.
+
+8. Inventory Calendar
+
+One row per:
+
+Room Type
+
++
+
+Date
+
+Stores:
+
+Total inventory
+Reserved inventory
+Available inventory
+Stop sell
+Closed to arrival
+Closed to departure
+
+This is the authoritative inventory source.
+
+9. Availability
+
+Availability is generated from Inventory Calendar plus pricing rules.
+
+It should not duplicate business logic.
+
+Purpose:
+
+Fast search
+Calendar rendering
+OTA synchronization
+10. Reservation
+
+Represents the guest's booking.
+
+Stores:
+
+Reservation number
+Primary guest
+Arrival
+Departure
+Adults
+Children
+Source
+Status
+Currency
+Total amount
+Outstanding balance
+
+Never stores room details directly.
+
+11. Reservation Room
+
+Supports multi-room reservations.
+
+Example:
+
+Reservation
+
+↓
+
+Room 101
+
+↓
+
+2 Adults
+
+
+
+Reservation
+
+↓
+
+Room 102
+
+↓
+
+2 Adults
+
+One reservation can contain many rooms.
+
+12. Guest
+
+Guest is independent of reservation.
+
+One guest may have:
+
+Multiple stays
+Multiple reservations
+Loyalty profile
+CRM history
+
+Guest data is reused across bookings.
+
+13. Guest Stay
+
+Tracks who stayed in each room.
+
+Example:
+
+Reservation
+
+↓
+
+Room 101
+
+↓
+
+Guest A
+
+Guest B
+
+Supports:
+
+Family bookings
+Group bookings
+Corporate bookings
+14. Add-ons
+
+Sellable extras.
+
+Examples:
+
+Breakfast
+Lunch
+Dinner
+Airport Pickup
+Extra Mattress
+Candlelight Dinner
+Kayaking
+Bonfire
+Bicycle Rental
+15. Reservation Add-on
+
+Relationship:
+
+Reservation
+
+↓
+
+Add-on
+
+↓
+
+Quantity
+
+↓
+
+Price
+
+Multiple add-ons per reservation.
+
+16. Coupon
+
+Coupons are independent entities.
+
+Examples:
+
+WELCOME10
+SUMMER25
+CORPORATE
+DIRECTBOOK
+
+Supports:
+
+Percentage
+Fixed amount
+Usage limits
+Validity
+Tenant-specific campaigns
+17. Payment
+
+Payments are transactions, not reservation attributes.
+
+Stores:
+
+Gateway
+Amount
+Status
+Method
+Transaction reference
+Payment date
+
+Supports:
+
+Partial payments
+Multiple payments
+Refunds
+18. Invoice
+
+Financial record.
+
+Stores:
+
+Invoice Number
+GST
+Tax breakdown
+Discounts
+Line Items
+Payment references
+
+One reservation may generate multiple invoices if required.
+
+19. Cancellation
+
+Separate entity.
+
+Stores:
+
+Cancelled By
+Reason
+Policy Applied
+Charges
+Date
+
+Never delete reservations.
+
+20. Refund
+
+Tracks money returned.
+
+Stores:
+
+Amount
+Payment reference
+Refund status
+Gateway reference
+Date
+
+Supports partial refunds.
+
+21. Reservation Status History
+
+Every status transition is recorded.
+
+Example:
+
+Draft
+
+↓
+
+Pending Payment
+
+↓
+
+Confirmed
+
+↓
+
+Checked In
+
+↓
+
+Checked Out
+
+Supports audit trails and reporting.
+
+22. Reservation Workflow
+Availability Search
+
+↓
+
+Quotation (optional)
+
+↓
+
+Reservation Created
+
+↓
+
+Payment Pending
+
+↓
+
+Confirmed
+
+↓
+
+Pre-arrival
+
+↓
+
+Check-In
+
+↓
+
+In House
+
+↓
+
+Check-Out
+
+↓
+
+Completed
+
+Alternative flows:
+
+Cancelled
+No Show
+Modified
+23. Booking Sources
+
+Reservations may originate from:
+
+Direct Website
+Reception (Walk-in)
+Phone
+WhatsApp
+Airbnb
+Booking.com
+Agoda
+MakeMyTrip
+Travel Agent
+Corporate
+
+Booking source is normalized for analytics.
+
+24. Dynamic Pricing Integration
+
+Reservations never calculate prices directly.
+
+Pricing comes from the Pricing Engine.
+
+Inputs include:
+
+Rate Plan
+Date
+Occupancy
+Events
+Holidays
+Promotions
+Coupons
+
+This keeps pricing logic centralized.
+
+25. Cross-Module Integration
+
+Reservation Management integrates with:
+
+Configuration (policies, taxes, pricing)
+Authentication (staff permissions)
+Website Builder (booking widgets)
+Finance (payments, invoices)
+CRM (guest history)
+PMS (check-in, housekeeping)
+Marketing (campaign attribution)
+Analytics (occupancy, ADR, RevPAR)
+
+No business logic should be duplicated.
+
+26. Future Expansion
+
+The schema should support:
+
+Group bookings
+Corporate contracts
+Packages
+Split payments
+OTA synchronization
+Channel manager
+Waitlists
+Upselling
+Dynamic room upgrades
+Loyalty redemption
+Gift vouchers
+
+without redesigning the core entities.
+
+Reservation Relationship Summary
+Tenant
+
+↓
+
+Property
+
+↓
+
+Room Type
+
+↓
+
+Room
+
+↓
+
+Inventory Calendar
+
+↓
+
+Availability
+
+↓
+
+Reservation
+
+├── Reservation Room
+
+├── Guest
+
+├── Guest Stay
+
+├── Add-on
+
+├── Payment
+
+├── Invoice
+
+├── Cancellation
+
+├── Refund
+
+└── Status History
+Critical Architectural Improvement
+
+One change I'd make before writing Django models is to introduce a Product Catalog domain.
+
+Instead of treating only rooms as sellable items, define everything that can be sold as a product.
+
+Product
+
+├── Room Stay
+
+├── Restaurant Meal
+
+├── Spa Service
+
+├── Activity
+
+├── Package
+
+├── Transport
+
+├── Merchandise
+
+└── Gift Voucher
+
+Then:
+
+RoomType becomes a specialized accommodation product.
+Add-ons reference products instead of custom tables.
+Future restaurant, activity, and package modules reuse the same pricing, tax, inventory, and invoice infrastructure.
+
+This aligns with your long-term goal of building a complete hospitality SaaS, not just a booking engine.

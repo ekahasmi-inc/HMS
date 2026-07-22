@@ -1,0 +1,477 @@
+Platform Core Design
+
+Version: 1.0
+
+Purpose
+
+The Platform Core provides the foundation for every other module.
+
+It is responsible for:
+
+Multi-tenancy
+Licensing
+Subscription
+Feature management
+Module management
+Tenant lifecycle
+
+It does not contain business logic.
+
+1. Platform Architecture
+Platform
+
+│
+
+├── Tenant Service
+
+├── Subscription Service
+
+├── Licensing Service
+
+├── Module Registry
+
+├── Feature Registry
+
+├── Domain Service
+
+├── Theme Registry
+
+└── System Configuration
+2. Core Django Apps
+
+Rather than putting everything into one core app, split the platform into focused apps.
+
+apps/
+
+core/
+tenants/
+subscriptions/
+licensing/
+configuration/
+identity/
+common/
+
+Each app has a single responsibility.
+
+3. Core Models
+3.1 Tenant
+
+Represents a subscribing business.
+
+Example:
+
+Tenant
+
+↓
+
+Sukhavasam Beach Resort
+
+Suggested fields:
+
+id (UUID)
+code (unique short code)
+slug
+status
+created_at
+updated_at
+
+The Tenant model should not contain resort profile information. That belongs in the Resort module.
+
+3.2 Domain
+
+Maps domains to tenants.
+
+Examples:
+
+sukhavasam.in
+
+↓
+
+Tenant
+
+
+abc.sukhavasam.in
+
+↓
+
+Tenant
+
+
+www.myresort.com
+
+↓
+
+Tenant
+
+Suggested fields:
+
+tenant
+hostname
+is_primary
+is_custom
+ssl_status
+verification_status
+
+One tenant can own multiple domains.
+
+3.3 SubscriptionPlan
+
+Defines commercial plans.
+
+Examples:
+
+Starter
+
+Professional
+
+Enterprise
+
+Suggested fields:
+
+name
+monthly_price
+yearly_price
+trial_days
+max_properties
+max_users
+active
+
+Notice that we store only plan metadata here—not features.
+
+3.4 Subscription
+
+Represents a tenant's active plan.
+
+Relationship:
+
+Tenant
+
+↓
+
+Subscription
+
+↓
+
+SubscriptionPlan
+
+Suggested fields:
+
+tenant
+plan
+start_date
+end_date
+status
+billing_cycle
+renewal_date
+payment_provider_subscription_id
+
+A tenant can have subscription history, but only one active subscription.
+
+3.5 Module
+
+A high-level capability.
+
+Examples:
+
+Website
+
+Booking
+
+CRM
+
+Restaurant
+
+Inventory
+
+Finance
+
+Marketing
+
+AI
+
+Suggested fields:
+
+code
+name
+description
+display_order
+active
+
+Modules should be globally defined by the platform.
+
+3.6 Feature
+
+A specific capability within a module.
+
+Example:
+
+Booking
+
+↓
+
+Coupons
+
+↓
+
+Online Payments
+
+↓
+
+Dynamic Pricing
+
+Suggested fields:
+
+module
+code
+name
+description
+active
+3.7 PlanFeature
+
+This table links plans to features.
+
+Relationship:
+
+Subscription Plan
+
+↓
+
+PlanFeature
+
+↓
+
+Feature
+
+Examples:
+
+Starter
+
+↓
+
+Website
+
+Enabled
+
+
+Starter
+
+↓
+
+CRM
+
+Disabled
+
+This avoids hardcoding plan capabilities.
+
+3.8 TenantFeatureOverride
+
+Sometimes a tenant receives custom access.
+
+Relationship:
+
+Tenant
+
+↓
+
+Feature
+
+↓
+
+Override
+
+This supports pilot customers, promotions, or enterprise agreements without changing plans.
+
+3.9 SystemSetting
+
+Platform-wide configuration.
+
+Examples:
+
+Default timezone
+Default currency
+Default trial length
+Default storage provider
+Maintenance mode
+
+These settings apply globally unless overridden elsewhere.
+
+4. Model Relationships
+SubscriptionPlan
+        │
+        │
+        └───────┐
+                │
+          PlanFeature
+                │
+                │
+             Feature
+                │
+             Module
+
+
+Tenant
+    │
+    ├──── Domain
+    │
+    ├──── Subscription
+    │
+    ├──── TenantFeatureOverride
+    │
+    └──── Future Business Modules
+5. Tenant Lifecycle
+
+Every tenant follows the same lifecycle.
+
+Lead
+
+↓
+
+Trial
+
+↓
+
+Active
+
+↓
+
+Grace Period
+
+↓
+
+Suspended
+
+↓
+
+Cancelled
+
+↓
+
+Archived
+
+Avoid deleting tenants.
+
+Inactive tenants preserve historical data.
+
+6. Module Loading
+
+Instead of hardcoding enabled modules:
+
+if booking_enabled:
+
+the application should evaluate:
+
+Tenant
+
+↓
+
+Subscription
+
+↓
+
+Plan
+
+↓
+
+Plan Features
+
+↓
+
+Feature Enabled?
+
+This allows adding new modules without code changes.
+
+7. Service Layer
+
+Every core model should have a corresponding service.
+
+Examples:
+
+TenantService
+
+SubscriptionService
+
+ModuleService
+
+FeatureService
+
+DomainService
+
+Views should call services rather than directly manipulating models.
+
+8. Platform Events
+
+The Platform Core should emit domain events.
+
+Examples:
+
+TenantCreated
+
+SubscriptionActivated
+
+SubscriptionExpired
+
+FeatureEnabled
+
+FeatureDisabled
+
+DomainVerified
+
+Other modules subscribe to these events instead of tightly coupling to the platform.
+
+9. Recommended Base Model
+
+Every model should inherit from a shared abstract base.
+
+Suggested common fields:
+
+id (UUID)
+created_at
+updated_at
+created_by
+updated_by
+is_active
+
+This ensures consistency across the platform.
+
+10. Platform Layer Diagram
+Platform Core
+
+├── Tenant
+├── Domain
+├── Subscription
+├── SubscriptionPlan
+├── Module
+├── Feature
+├── PlanFeature
+├── TenantFeatureOverride
+└── SystemSetting
+11. Folder Structure
+
+I recommend structuring the implementation like this:
+
+backend/
+│
+├── apps/
+│   ├── common/
+│   ├── tenants/
+│   ├── subscriptions/
+│   ├── licensing/
+│   ├── configuration/
+│   ├── identity/
+│   ├── website/
+│   ├── booking/
+│   ├── pms/
+│   ├── crm/
+│   ├── inventory/
+│   ├── restaurant/
+│   ├── finance/
+│   ├── marketing/
+│   ├── analytics/
+│   └── ai/
+│
+├── config/
+├── templates/
+├── static/
+├── media/
+├── docs/
+└── requirements/
