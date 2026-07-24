@@ -1,4 +1,5 @@
 from django.db import models
+from .managers import BaseManager, DeletedManager
 
 from .mixins import (
     AuditMixin,
@@ -14,9 +15,11 @@ class BaseModel(
     AuditMixin,
     SoftDeleteMixin,
 ):
-    """
-    Base class for all models.
-    """
+
+    objects = BaseManager()
+
+    deleted_objects = DeletedManager()
+
 
     class Meta:
         abstract = True

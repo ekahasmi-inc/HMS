@@ -1,0 +1,112 @@
+Updated Roadmap V2
+
+Sprint 0
+
+Infrastructure
+
+Repository
+Django
+Settings
+CI
+Environment
+Shared
+Common skeleton
+Sprint 1
+
+Common Framework
+
+BaseModel
+UUID support
+Timestamp support
+Audit support
+Soft delete
+Base managers
+Base querysets
+Common validators
+Common exceptions
+Sprint 2
+
+Platform Core
+
+tenants
+
+subscriptions
+
+licensing
+
+configuration
+Sprint 3
+
+Identity
+
+users
+
+roles
+
+permissions
+
+audit
+Sprint 4
+
+Website Experience
+
+website
+
+cms
+
+assets
+
+seo
+
+forms
+Sprint 5
+
+Reservation Platform
+
+booking
+
+inventory
+
+pricing
+
+payments
+Sprint 6
+
+Hospitality Operations
+
+pms
+
+housekeeping
+
+restaurant
+Sprint 7
+
+Distribution Platform
+
+ota
+
+channel_manager
+
+availability_sync
+
+rate_manager
+Sprint 8
+
+Business Platform
+
+crm
+
+finance
+
+marketing
+
+analytics
+Sprint 9
+
+Intelligence Platform
+
+ai
+
+automation
+
+forecasting

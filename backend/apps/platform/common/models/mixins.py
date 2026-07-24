@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class UUIDMixin(models.Model):
@@ -63,9 +64,6 @@ class AuditMixin(models.Model):
 
 
 class SoftDeleteMixin(models.Model):
-    """
-    Enables logical deletion.
-    """
 
     is_deleted = models.BooleanField(
         default=False,
@@ -84,6 +82,42 @@ class SoftDeleteMixin(models.Model):
         on_delete=models.SET_NULL,
         related_name="%(class)s_deleted",
     )
+
+
+    def delete(
+        self,
+        using=None,
+        keep_parents=False
+    ):
+        """
+        Soft delete.
+        """
+
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save(
+            update_fields=[
+                "is_deleted",
+                "deleted_at",
+            ]
+        )
+
+
+    def restore(self):
+        """
+        Restore deleted record.
+        """
+
+        self.is_deleted = False
+        self.deleted_at = None
+
+        self.save(
+            update_fields=[
+                "is_deleted",
+                "deleted_at",
+            ]
+        )
+
 
     class Meta:
         abstract = True
