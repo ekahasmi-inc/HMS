@@ -1,0 +1,369 @@
+Sprint 0 — Repository & Foundation
+Objective
+
+Create a production-ready Django SaaS foundation with:
+
+Clean repository structure
+Environment management
+Django initialization
+Configuration separation
+Logging
+Testing framework
+Code quality tools
+Shared infrastructure foundation
+Sprint 0 Deliverables
+
+At the end of this sprint, repository should look like:
+
+HMS/
+│
+├── backend/
+│   │
+│   ├── config/
+│   │   ├── settings/
+│   │   │   ├── base.py
+│   │   │   ├── development.py
+│   │   │   ├── production.py
+│   │   │   └── testing.py
+│   │   │
+│   │   ├── urls.py
+│   │   ├── asgi.py
+│   │   └── wsgi.py
+│   │
+│   ├── apps/
+│   │   ├── common/
+│   │   ├── tenants/
+│   │   ├── subscriptions/
+│   │   └── configuration/
+│   │
+│   ├── manage.py
+│   └── requirements/
+│
+│
+├── shared/
+│   ├── exceptions/
+│   ├── utils/
+│   ├── constants/
+│   ├── validators/
+│   └── events/
+│
+│
+├── tests/
+│
+├── docs/
+│
+├── deployment/
+│
+├── scripts/
+│
+├── .env.example
+├── .gitignore
+├── README.md
+└── docker-compose.yml
+Sprint 0 Tasks
+Task 0.1 — Repository Verification
+
+First confirm GitHub is ready.
+
+Run:
+
+git status
+
+Expected:
+
+On branch main
+nothing to commit
+
+Verify remote:
+
+git remote -v
+
+Expected:
+
+origin https://github.com/ekahasmi-inc/HMS.git
+Task 0.2 — Create Folder Foundation
+
+From:
+
+C:\Users\91981\HMS
+
+Create:
+
+mkdir backend
+mkdir shared
+mkdir tests
+mkdir deployment
+mkdir scripts
+
+Create documentation structure:
+
+mkdir docs
+mkdir docs\00_Governance
+mkdir docs\01_Product
+mkdir docs\02_Architecture
+mkdir docs\03_Database
+mkdir docs\04_Implementation
+mkdir docs\05_ADR
+mkdir docs\10_Feature_Specs
+Task 0.3 — Create Python Environment
+
+Current:
+
+(venv)
+
+Good.
+
+Verify:
+
+python --version
+
+Target:
+
+Python 3.12+
+
+Recommended:
+
+Python 3.12
+Django 5.x
+PostgreSQL 16
+Redis
+Celery
+Task 0.4 — Create Django Project
+
+Move into backend:
+
+cd backend
+
+Install Django:
+
+pip install django
+
+Create project:
+
+django-admin startproject config .
+
+Result:
+
+backend/
+
+├── config/
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
+
+└── manage.py
+Task 0.5 — Convert Settings to Enterprise Structure
+
+Current:
+
+config/settings.py
+
+Change to:
+
+config/settings/
+
+├── __init__.py
+├── base.py
+├── development.py
+├── production.py
+└── testing.py
+
+Why?
+
+Because SaaS environments are different:
+
+Development:
+
+DEBUG=True
+SQLite/PostgreSQL
+local email
+
+Production:
+
+DEBUG=False
+PostgreSQL
+S3
+Redis
+Celery
+
+Testing:
+
+isolated database
+Task 0.6 — Create Shared Layer
+
+Create:
+
+shared/
+
+Purpose:
+
+Pure Python reusable code.
+
+Example:
+
+shared/
+
+constants/
+
+exceptions/
+
+utils/
+
+validators/
+
+events/
+
+
+No Django dependency.
+
+Task 0.7 — Create Common App
+
+Create:
+
+python manage.py startapp common
+
+Move:
+
+common
+
+into:
+
+backend/apps/common
+
+Purpose:
+
+Django-aware reusable components.
+
+Contains:
+
+models/
+
+mixins/
+
+managers/
+
+permissions/
+
+middleware/
+
+Task 0.8 — Install Base Dependencies
+
+Create:
+
+backend/requirements/
+
+Files:
+
+base.txt
+
+development.txt
+
+production.txt
+
+Initial:
+
+base.txt
+
+Django
+python-dotenv
+psycopg2-binary
+django-environ
+
+development.txt
+
+-r base.txt
+
+pytest
+pytest-django
+black
+ruff
+isort
+Task 0.9 — Environment Management
+
+Create:
+
+.env.example
+
+Example:
+
+DEBUG=True
+
+SECRET_KEY=
+
+DATABASE_URL=
+
+REDIS_URL=
+
+ALLOWED_HOSTS=
+
+Never commit:
+
+.env
+Task 0.10 — First Architecture Commit
+
+After structure creation:
+
+git add .
+
+Commit:
+
+git commit -m "chore: initialize django foundation structure"
+
+Push:
+
+git push
+Sprint 0 Completion Criteria
+
+Sprint 0 is complete when:
+
+✅ Git repository working
+✅ Architecture tag preserved
+✅ Django project created
+✅ Settings separated
+✅ Environment variables configured
+✅ Shared layer created
+✅ Common app created
+✅ Requirements structured
+✅ Basic CI ready
+✅ Documentation linked
+
+After Sprint 0
+
+The next sprint will be:
+
+Sprint 1 — Common Framework
+
+Implementation:
+
+common/
+
+├── models/
+│   ├── base.py
+│   ├── tenant.py
+│
+├── mixins/
+│
+├── managers/
+│
+├── exceptions/
+│
+├── validators/
+│
+└── middleware/
+
+First models:
+
+BaseModel
+
+TenantModel
+
+AuditModel
+
+SoftDeleteModel
+
+Only after this will we create:
+
+tenants
+subscriptions
+configuration

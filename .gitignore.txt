@@ -4,8 +4,13 @@ __pycache__/
 *.pyo
 *.pyd
 *.sqlite3
+
+
+# Environment
 .env
-.env.render
+.env.*
+!.env.example
+
 
 # Virtual environment
 env/
@@ -14,8 +19,10 @@ ENV/
 
 # Django specific
 *.log
+logs/
 staticfiles/
 #media/
+media/
 
 # IDEs and editors
 .vscode/
