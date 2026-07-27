@@ -1,7 +1,7 @@
 from django.db import models
-
 from apps.platform.common.models import BaseModel
-
+from django.utils import timezone
+from apps.platform.tenants.models import Tenant
 
 class Plan(BaseModel):
     """
@@ -73,3 +73,42 @@ class Feature(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+
+class Subscription(BaseModel):
+    """
+    Represents a tenant's subscription to a SaaS plan.
+    """
+
+    class Status(models.TextChoices):
+        TRIAL = "TRIAL", "Trial"
+        ACTIVE = "ACTIVE", "Active"
+        SUSPENDED = "SUSPENDED", "Suspended"
+        CANCELLED = "CANCELLED", "Cancelled"
+        EXPIRED = "EXPIRED", "Expired"
+
+    class BillingStatus(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        PAID = "PAID", "Paid"
+        OVERDUE = "OVERDUE", "Overdue"
+        FAILED = "FAILED", "Failed"
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="subscriptions",)
+    plan = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name="subscriptions",)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.TRIAL, db_index=True,)
+    billing_status = models.CharField(max_length=20, choices=BillingStatus.choices, default=BillingStatus.PENDING, db_index=True,)
+    start_date = models.DateField(default=timezone.now,)
+    end_date = models.DateField()
+    renewal_date = models.DateField(null=True, blank=True,)
+    trial_end_date = models.DateField(null=True, blank=True,)
+    auto_renew = models.BooleanField(default=True,)
+
+    class Meta:
+        db_table = "subscriptions"
+        verbose_name = "Subscription"
+        verbose_name_plural = "Subscriptions"
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return f"{self.tenant.name} - {self.plan.name}"
