@@ -62,3 +62,33 @@ class TenantDomain(BaseModel):
 
     def __str__(self):
         return self.domain
+
+
+class TenantBranding(BaseModel):
+    """
+    Branding configuration for a tenant.
+    """
+
+    tenant = models.OneToOneField(Tenant, on_delete=models.CASCADE, related_name="branding",)
+
+    display_name = models.CharField( max_length=200,)
+
+    tagline = models.CharField( max_length=255, blank=True,)
+
+    logo = models.ImageField( upload_to="branding/logos/", blank=True, null=True,)
+
+    favicon = models.ImageField( upload_to="branding/favicons/", blank=True, null=True,)
+
+    primary_color = models.CharField( max_length=7, default="#0F766E", help_text="HEX color",)
+
+    secondary_color = models.CharField(max_length=7, default="#FFFFFF", help_text="HEX color",)
+
+    accent_color = models.CharField( max_length=7, default="#F59E0B", help_text="HEX color",)
+
+    class Meta:
+        db_table = "tenant_branding"
+        verbose_name = "Tenant Branding"
+        verbose_name_plural = "Tenant Branding"
+
+    def __str__(self):
+        return self.display_name

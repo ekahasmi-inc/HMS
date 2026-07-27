@@ -1,6 +1,10 @@
 from django.contrib import admin
 
-from .models import Tenant,TenantDomain
+from .models import (
+    Tenant,
+    TenantDomain,
+    TenantBranding,
+)
 
 
 @admin.register(Tenant)
@@ -22,3 +26,9 @@ class TenantDomainAdmin(admin.ModelAdmin):
     list_filter = ("status","is_primary","is_verified","ssl_enabled",)
 
     search_fields = ("domain", "tenant__name",)
+
+@admin.register(TenantBranding)
+class TenantBrandingAdmin(admin.ModelAdmin):
+    list_display = ("display_name", "tenant", "primary_color",)
+
+    search_fields = ("display_name", "tenant__name",)
