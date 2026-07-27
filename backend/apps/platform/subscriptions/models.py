@@ -32,3 +32,44 @@ class Plan(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+class Feature(BaseModel):
+    """
+    Master catalog of platform capabilities.
+
+    Features are independent of plans and tenants.
+    """
+
+    class Category(models.TextChoices):
+        PLATFORM = "PLATFORM", "Platform"
+        WEBSITE = "WEBSITE", "Website"
+        BOOKING = "BOOKING", "Booking"
+        PMS = "PMS", "PMS"
+        RESTAURANT = "RESTAURANT", "Restaurant"
+        CRM = "CRM", "CRM"
+        MARKETING = "MARKETING", "Marketing"
+        ANALYTICS = "ANALYTICS", "Analytics"
+        AI = "AI", "AI"
+        OTA = "OTA", "OTA"
+        FINANCE = "FINANCE", "Finance"
+
+    name = models.CharField( max_length=150, unique=True, db_index=True,)
+    code = models.SlugField(max_length=100, unique=True, help_text="Stable system identifier.",)
+    category = models.CharField(max_length=30, choices=Category.choices, db_index=True,)
+    description = models.TextField( blank=True,)
+    is_active = models.BooleanField( default=True, db_index=True,)
+    display_order = models.PositiveIntegerField( default=0,)
+
+    class Meta:
+        db_table = "subscription_features"
+        ordering = [
+            "category",
+            "display_order",
+            "name",
+        ]
+        verbose_name = "Feature"
+        verbose_name_plural = "Features"
+
+    def __str__(self):
+        return self.name

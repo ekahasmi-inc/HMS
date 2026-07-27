@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Plan
+from .models import Plan, Feature
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
@@ -10,3 +10,14 @@ class PlanAdmin(admin.ModelAdmin):
     prepopulated_fields = {
         "code": ("name",)
     }
+
+@admin.register(Feature)
+class FeatureAdmin(admin.ModelAdmin):
+    list_display = ("name","category","code","is_active","display_order",)
+    list_filter = ("category", "is_active",)
+    search_fields = ("name", "code",)
+    prepopulated_fields = {
+        "code": ("name",)
+    }
+
+    ordering = ( "category","display_order", "name",)
