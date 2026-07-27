@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Plan, Feature, Subscription
+from .models import (
+    Plan,
+    Feature,
+    Subscription,
+    SubscriptionFeature,
+)
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
@@ -29,3 +34,11 @@ class SubscriptionAdmin(admin.ModelAdmin):
     list_filter = ("status", "billing_status", "auto_renew",)
     search_fields = ("tenant__name", "plan__name",)
     autocomplete_fields = ("tenant", "plan",)
+
+@admin.register(SubscriptionFeature)
+class SubscriptionFeatureAdmin(admin.ModelAdmin):
+
+    list_display = ("subscription", "feature", "is_enabled", "usage_limit",)
+    list_filter = ("is_enabled", "feature__category",)
+    search_fields = ("subscription__tenant__name", "feature__name",)
+    autocomplete_fields = ("subscription", "feature",)

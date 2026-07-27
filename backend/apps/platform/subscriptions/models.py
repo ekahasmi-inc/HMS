@@ -112,3 +112,30 @@ class Subscription(BaseModel):
 
     def __str__(self):
         return f"{self.tenant.name} - {self.plan.name}"
+
+class SubscriptionFeature(BaseModel):
+    """
+    Feature assignment for a subscription.
+
+    Determines which platform capabilities are available
+    for a particular subscription.
+    """
+
+    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name="features",)
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="subscriptions",)
+    is_enabled = models.BooleanField(default=True, db_index=True,)
+    usage_limit = models.PositiveIntegerField(null=True, blank=True, help_text="Optional usage limit. Null means unlimited.",)
+    override_value = models.CharField(max_length=255, blank=True, help_text="Optional override for this feature.",)
+    class Meta:
+        db_table = "subscription_feature_mapping"
+        verbose_name = "Subscription Feature"
+        verbose_name_plural = "Subscription Features"
+
+        constraints = [
+            models.UniqueConstraint(fields=["subscription", "feature"], name="uq_subscription_feature",)
+        ]
+
+        ordering = ["feature__category", "feature__display_order",]
+
+    def __str__(self):
+        return f"{self.subscription} → {self.feature}"
