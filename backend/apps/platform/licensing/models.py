@@ -41,3 +41,33 @@ class License(BaseModel):
 
     def __str__(self):
         return f"{self.tenant.name} ({self.license_type})"
+
+class LicenseKey(BaseModel):
+    """
+    Credential associated with a software license.
+    """
+
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Active"
+        DISABLED = "DISABLED", "Disabled"
+        REVOKED = "REVOKED", "Revoked"
+        EXPIRED = "EXPIRED", "Expired"
+
+
+    license = models.ForeignKey(License, on_delete=models.CASCADE, related_name="keys",)
+    key = models.CharField(max_length=255, unique=True, db_index=True,)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE, db_index=True,)
+    issued_at = models.DateTimeField(default=timezone.now,)
+    expires_at = models.DateTimeField(null=True, blank=True,)
+    last_used_at = models.DateTimeField(null=True, blank=True,)
+    notes = models.TextField(blank=True,)
+
+    class Meta:
+        db_table = "license_keys"
+        verbose_name = "License Key"
+        verbose_name_plural = "License Keys"
+        ordering = ["-issued_at"]
+
+
+    def __str__(self):
+        return self.key
