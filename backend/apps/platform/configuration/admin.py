@@ -4,6 +4,7 @@ from django.forms import Textarea
 from .models import (
     ConfigurationCategory,
     ConfigurationKey,
+    ConfigurationValue,
 )
 
 
@@ -54,3 +55,31 @@ class ConfigurationKeyAdmin(admin.ModelAdmin):
             })
         }
     }
+
+@admin.register(ConfigurationValue)
+class ConfigurationValueAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "tenant",
+        "configuration_key",
+        "value",
+        "is_active",
+    )
+
+    list_filter = (
+        "tenant",
+        "is_active",
+        "configuration_key__category",
+    )
+
+    search_fields = (
+        "tenant__name",
+        "configuration_key__name",
+        "configuration_key__code",
+        "value",
+    )
+
+    autocomplete_fields = (
+        "tenant",
+        "configuration_key",
+    )

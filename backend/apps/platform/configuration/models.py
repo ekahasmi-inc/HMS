@@ -1,7 +1,7 @@
 from django.db import models
 
 from apps.platform.common.models import BaseModel
-
+from apps.platform.tenants.models import Tenant
 
 class ConfigurationCategory(BaseModel):
     """
@@ -66,3 +66,22 @@ class ConfigurationKey(BaseModel):
 
     def __str__(self):
         return f"{self.category.name} - {self.name}"
+
+class ConfigurationValue(BaseModel):
+    """
+    Stores tenant-specific configuration values.
+    """
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="configuration_values",)
+    configuration_key = models.ForeignKey( ConfigurationKey, on_delete=models.CASCADE, related_name="values",)
+    value = models.TextField( blank=True, help_text="Stored as text. Parsed according to ConfigurationKey.data_type.",)
+    is_active = models.BooleanField(default=True, db_index=True,)
+
+    class Meta:
+        db_table = "configuration_values"
+        verbose_name = "Configuration Value"
+        verbose_name_plural = "Configuration Values"
+        constraints = [models.UniqueConstraint(fields=["tenant", "configuration_key"], name="uq_configuration_value_tenant_key",)]
+        ordering = ["tenant", "configuration_key",]
+
+    def __str__(self):
+        return f"{self.tenant.name} - {self.configuration_key.code}"
