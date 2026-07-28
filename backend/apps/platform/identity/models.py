@@ -56,3 +56,28 @@ class Permission(BaseModel):
 
     def __str__(self):
         return self.code
+
+class RolePermission(BaseModel):
+    """
+    Maps roles to permissions.
+    """
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="role_permissions",)
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="role_permissions",)
+    is_granted = models.BooleanField( default=True, help_text="Allows future deny/override support.",)
+
+    class Meta:
+        db_table = "role_permissions"
+        verbose_name = "Role Permission"
+        verbose_name_plural = "Role Permissions"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["role", "permission"],
+                name="uq_role_permission",
+            )
+        ]
+
+        ordering = ["role", "permission",]
+
+    def __str__(self):
+        return f"{self.role.name} → {self.permission.code}"

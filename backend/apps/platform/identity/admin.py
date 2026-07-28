@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Role, User, Permission
+from .models import Role, User, Permission, RolePermission
 
 
 @admin.register(User)
@@ -33,3 +33,34 @@ class PermissionAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+@admin.register(RolePermission)
+class RolePermissionAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "role",
+        "permission",
+        "is_granted",
+    )
+
+    list_filter = (
+        "role",
+        "permission__module",
+        "is_granted",
+    )
+
+    search_fields = (
+        "role__name",
+        "permission__code",
+    )
+
+    autocomplete_fields = (
+        "role",
+        "permission",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    
