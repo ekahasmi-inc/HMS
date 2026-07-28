@@ -71,3 +71,41 @@ class LicenseKey(BaseModel):
 
     def __str__(self):
         return self.key
+
+
+class Activation(BaseModel):
+    """
+    Tracks usage/activation of a license key.
+    """
+
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Active"
+        REVOKED = "REVOKED", "Revoked"
+        EXPIRED = "EXPIRED", "Expired"
+
+    class Source(models.TextChoices):
+        WEB = "WEB", "Web"
+        MOBILE = "MOBILE", "Mobile"
+        DESKTOP = "DESKTOP", "Desktop"
+        SERVER = "SERVER", "Server"
+
+    license_key = models.ForeignKey(LicenseKey, on_delete=models.CASCADE, related_name="activations",)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="license_activations",)
+    source = models.CharField(max_length=20, choices=Source.choices, default=Source.WEB,)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE, db_index=True,)
+    activated_at = models.DateTimeField(default=timezone.now,)
+    last_seen_at = models.DateTimeField(null=True, blank=True,)
+    ip_address = models.GenericIPAddressField(null=True, blank=True,)
+    device_identifier = models.CharField(max_length=255, null=True, blank=True, help_text="Future device/server fingerprint.",)
+    metadata = models.JSONField(default=dict, blank=True, help_text="Additional activation information.",)
+
+    class Meta:
+        db_table = "license_activations"
+        verbose_name = "License Activation"
+        verbose_name_plural = "License Activations"
+        ordering = [
+            "-activated_at"
+        ]
+
+    def __str__(self):
+        return f"{self.tenant.name} - {self.license_key.key}"

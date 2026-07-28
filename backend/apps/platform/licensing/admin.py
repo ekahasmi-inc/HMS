@@ -1,6 +1,9 @@
 from django.contrib import admin
-
-from .models import License, LicenseKey
+from .models import (
+    License,
+    LicenseKey,
+    Activation,
+)
 
 
 @admin.register(License)
@@ -50,4 +53,32 @@ class LicenseKeyAdmin(admin.ModelAdmin):
 
     autocomplete_fields = (
         "license",
+    )
+
+@admin.register(Activation)
+class ActivationAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "tenant",
+        "license_key",
+        "source",
+        "status",
+        "activated_at",
+        "last_seen_at",
+    )
+
+    list_filter = (
+        "source",
+        "status",
+    )
+
+    search_fields = (
+        "tenant__name",
+        "license_key__key",
+        "ip_address",
+    )
+
+    autocomplete_fields = (
+        "tenant",
+        "license_key",
     )
