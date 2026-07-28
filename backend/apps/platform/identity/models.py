@@ -33,3 +33,26 @@ class Role(BaseModel):
 
     def __str__(self):
         return self.name
+
+class Permission(BaseModel):
+    """
+    Defines a single platform permission.
+    """
+    class Scope(models.TextChoices):
+        PLATFORM = "PLATFORM", "Platform"
+        TENANT = "TENANT", "Tenant"
+
+    name = models.CharField(max_length=150, unique=True,)
+    code = models.SlugField(max_length=150, unique=True, db_index=True, help_text="Example: booking.create",)
+    module = models.CharField(max_length=100, db_index=True, help_text="Module name (booking, website, pms, crm, etc.)",)
+    scope = models.CharField(max_length=20, choices=Scope.choices, default=Scope.TENANT, db_index=True,)
+    description = models.TextField(blank=True,)
+    is_system_permission = models.BooleanField(default=True, help_text="Core platform permission.",)
+    is_active = models.BooleanField(default=True, db_index=True,)
+
+    class Meta:
+        db_table = "permissions"
+        ordering = ["module", "code",]
+
+    def __str__(self):
+        return self.code
