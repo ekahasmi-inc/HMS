@@ -27,3 +27,27 @@ class Website(BaseModel):
 
     def __str__(self):
         return self.name
+
+class WebsiteTheme(BaseModel):
+    """
+    Visual theme configuration for a website.
+    """
+
+    class ThemeMode(models.TextChoices):
+        LIGHT = "LIGHT", "Light"
+        DARK = "DARK", "Dark"
+        AUTO = "AUTO", "Auto"
+
+    website = models.OneToOneField(Website, on_delete=models.CASCADE, related_name="theme",)
+    theme_name = models.CharField(max_length=100, default="Default",)
+    theme_slug = models.SlugField(max_length=100, db_index=True,)
+    mode = models.CharField( max_length=10, choices=ThemeMode.choices, default=ThemeMode.LIGHT,)
+    version = models.CharField(max_length=20, default="1.0",)
+    is_active = models.BooleanField(default=True, db_index=True,)
+
+    class Meta:
+        db_table = "website_themes"
+        ordering = ["theme_name"]
+
+    def __str__(self):
+        return f"{self.website.name} - {self.theme_name}"
