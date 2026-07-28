@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.platform.tenants",
     "apps.platform.subscriptions",
     "apps.platform.licensing",
+    "apps.platform.configuration",
 ]
 
 MIDDLEWARE = [
