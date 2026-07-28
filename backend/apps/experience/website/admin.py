@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Website, WebsiteTheme, WebsiteMenu, WebsiteMenuItem
+from .models import Website, WebsiteTheme, WebsiteMenu, WebsiteMenuItem, WebsiteSettings
 
 
 @admin.register(Website)
@@ -112,4 +112,29 @@ class WebsiteMenuItemAdmin(admin.ModelAdmin):
     ordering = (
         "menu",
         "display_order",
+    )
+
+@admin.register(WebsiteSettings)
+class WebsiteSettingsAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "website",
+        "default_language",
+        "maintenance_mode",
+        "show_booking_button",
+    )
+
+    list_filter = (
+        "maintenance_mode",
+        "show_booking_button",
+    )
+
+    search_fields = (
+        "website__name",
+        "contact_email",
+        "contact_phone",
+    )
+
+    autocomplete_fields = (
+        "website",
     )

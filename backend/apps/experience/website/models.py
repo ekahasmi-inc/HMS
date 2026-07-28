@@ -124,3 +124,27 @@ class WebsiteMenuItem(BaseModel):
 
     def __str__(self):
         return self.title
+
+class WebsiteSettings(BaseModel):
+    """
+    Operational settings for a website.
+    """
+    website = models.OneToOneField(Website, on_delete=models.CASCADE, related_name="settings",)
+    default_language = models.CharField(max_length=10,default="en",)
+    timezone = models.CharField(max_length=50, default="Asia/Kolkata",)
+    contact_email = models.EmailField(blank=True,)
+    contact_phone = models.CharField(max_length=30,blank=True,)
+    address = models.TextField(blank=True,)
+    footer_text = models.TextField(blank=True,)
+    maintenance_mode = models.BooleanField(default=False,)
+    show_booking_button = models.BooleanField(default=True,)
+    booking_button_text = models.CharField(max_length=100, default="Book Now",)
+    privacy_policy_enabled = models.BooleanField(default=True,)
+    cookie_notice_enabled = models.BooleanField(default=True,)
+    social_links = models.JSONField(default=dict, blank=True, help_text="Social media URLs",)
+
+    class Meta:
+        db_table = "website_settings"
+
+    def __str__(self):
+        return f"{self.website.name} settings"
