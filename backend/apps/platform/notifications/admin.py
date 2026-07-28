@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import NotificationTemplate, Notification
+from .models import NotificationTemplate, Notification, NotificationLog
 
 
 @admin.register(NotificationTemplate)
@@ -51,6 +51,36 @@ class NotificationAdmin(admin.ModelAdmin):
         "tenant",
         "template",
         "recipient",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+@admin.register(NotificationLog)
+class NotificationLogAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "notification",
+        "provider",
+        "attempt_number",
+        "status",
+        "processed_at",
+    )
+
+    list_filter = (
+        "provider",
+        "status",
+    )
+
+    search_fields = (
+        "provider",
+        "provider_message_id",
+    )
+
+    autocomplete_fields = (
+        "notification",
     )
 
     readonly_fields = (

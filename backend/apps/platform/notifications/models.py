@@ -59,3 +59,38 @@ class Notification(BaseModel):
         return f"{self.template.name} → {self.status}"
 
 
+class NotificationLog(BaseModel):
+    """
+    Audit log for notification delivery attempts.
+    """
+    class DeliveryStatus(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        SENT = "SENT", "Sent"
+        DELIVERED = "DELIVERED", "Delivered"
+        FAILED = "FAILED", "Failed"
+        BOUNCED = "BOUNCED", "Bounced"
+        OPENED = "OPENED", "Opened"
+        CLICKED = "CLICKED", "Clicked"
+
+    notification = models.ForeignKey(Notification, on_delete=models.CASCADE, related_name="logs",)
+    provider = models.CharField(max_length=100, help_text="Provider name (Brevo, Twilio, WhatsApp Cloud API, etc.)",)
+    provider_message_id = models.CharField(max_length=255, blank=True,)
+    attempt_number = models.PositiveIntegerField(default=1,)
+    status = models.CharField(max_length=20, choices=DeliveryStatus.choices, default=DeliveryStatus.PENDING, db_index=True,)
+    request_payload = models.JSONField(default=dict, blank=True,)
+    response_payload = models.JSONField(default=dict, blank=True,)
+    error_message = models.TextField(blank=True,)
+    processed_at = models.DateTimeField(null=True, blank=True,)
+
+    class Meta:
+        db_table = "notification_logs"
+        ordering = ["-created_at",]
+
+    def __str__(self):
+        return (
+            f"{self.notification.id} "
+            f"Attempt {self.attempt_number} "
+            f"({self.status})"
+        )
+
+
