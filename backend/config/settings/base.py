@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.platform.licensing",
     "apps.platform.configuration",
     "apps.platform.notifications",
+    "apps.experience.website",
 ]
 
 MIDDLEWARE = [
