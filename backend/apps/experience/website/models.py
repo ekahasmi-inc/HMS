@@ -87,3 +87,40 @@ class WebsiteMenu(BaseModel):
 
     def __str__(self):
         return f"{self.website.name} - {self.name}"
+
+class WebsiteMenuItem(BaseModel):
+    """
+    Individual navigation item belonging to a menu.
+    """
+    class LinkType(models.TextChoices):
+        INTERNAL = "INTERNAL", "Internal"
+        EXTERNAL = "EXTERNAL", "External"
+
+    menu = models.ForeignKey(WebsiteMenu, on_delete=models.CASCADE, related_name="items",)
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="children",)
+    title = models.CharField(max_length=100,)
+    slug = models.SlugField(max_length=100,)
+    url = models.CharField(max_length=500, help_text="Internal path or external URL.",)
+    link_type = models.CharField(max_length=20, choices=LinkType.choices, default=LinkType.INTERNAL,)
+    icon = models.CharField(max_length=100, blank=True,)
+    display_order = models.PositiveIntegerField(default=0, db_index=True,)
+    open_in_new_tab = models.BooleanField(default=False,)
+    is_visible = models.BooleanField(default=True, db_index=True,)
+
+    class Meta:
+        db_table = "website_menu_items"
+
+        ordering = [
+            "display_order",
+            "title",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["menu", "slug"],
+                name="uq_menu_item_slug",
+            )
+        ]
+
+    def __str__(self):
+        return self.title
