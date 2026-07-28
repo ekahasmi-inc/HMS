@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Role, User, Permission, RolePermission
+from .models import Role, User, Permission, RolePermission, UserRole
 
 
 @admin.register(User)
@@ -63,4 +63,38 @@ class RolePermissionAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    
+
+@admin.register(UserRole)
+class UserRoleAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "user",
+        "tenant",
+        "role",
+        "is_primary",
+        "is_active",
+    )
+
+    list_filter = (
+        "tenant",
+        "role",
+        "is_active",
+    )
+
+    search_fields = (
+        "user__email",
+        "user__username",
+        "role__name",
+        "tenant__name",
+    )
+
+    autocomplete_fields = (
+        "user",
+        "role",
+        "tenant",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )

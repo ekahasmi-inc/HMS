@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
 from apps.platform.common.models import BaseModel
 from .managers import CustomUserManager
 
@@ -13,7 +14,6 @@ class User(BaseModel, AbstractUser):
         db_table = "identity_users"
         verbose_name = "User"
         verbose_name_plural = "Users"
-
 
 class Role(BaseModel):
     """
@@ -81,3 +81,29 @@ class RolePermission(BaseModel):
 
     def __str__(self):
         return f"{self.role.name} → {self.permission.code}"
+
+
+class UserRole(BaseModel):
+    """
+    Assigns roles to users.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_roles",)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="user_roles",)
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="user_roles", help_text="Tenant where this role assignment is valid.",)
+    is_primary = models.BooleanField(default=False, help_text="Primary role for this tenant.",)
+    is_active = models.BooleanField(default=True, db_index=True,)
+
+    class Meta:
+        db_table = "user_roles"
+
+        verbose_name = "User Role"
+        verbose_name_plural = "User Roles"
+
+        constraints = [
+            models.UniqueConstraint(fields=["user", "role", "tenant"], name="uq_user_role_tenant",)
+        ]
+
+        ordering = ["tenant", "user", "role",]
+
+    def __str__(self):
+        return f"{self.user} → {self.role.name} ({self.tenant.name})"
