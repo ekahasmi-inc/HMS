@@ -1,5 +1,5 @@
 from django.db import models
-
+from apps.platform.subscriptions.models import Feature
 from apps.platform.common.models import BaseModel
 from apps.platform.tenants.models import Tenant
 
@@ -85,3 +85,24 @@ class ConfigurationValue(BaseModel):
 
     def __str__(self):
         return f"{self.tenant.name} - {self.configuration_key.code}"
+
+
+class FeatureFlag(BaseModel):
+    """
+    Runtime feature enable/disable for a tenant.
+    """
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="feature_flags",)
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_flags",)
+    is_enabled = models.BooleanField(default=True, db_index=True,)
+    rollout_percentage = models.PositiveSmallIntegerField(default=100, help_text="Reserved for gradual rollout (0–100).",)
+    notes = models.TextField(blank=True,)
+
+    class Meta:
+        db_table = "feature_flags"
+        verbose_name = "Feature Flag"
+        verbose_name_plural = "Feature Flags"
+        constraints = [models.UniqueConstraint(fields=["tenant", "feature"], name="uq_feature_flag_tenant_feature",)]
+        ordering = ["tenant", "feature",]
+
+    def __str__(self):
+        return f"{self.tenant.name} - {self.feature.code}"

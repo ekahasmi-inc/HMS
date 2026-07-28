@@ -5,6 +5,7 @@ from .models import (
     ConfigurationCategory,
     ConfigurationKey,
     ConfigurationValue,
+    FeatureFlag,
 )
 
 
@@ -82,4 +83,30 @@ class ConfigurationValueAdmin(admin.ModelAdmin):
     autocomplete_fields = (
         "tenant",
         "configuration_key",
+    )
+
+@admin.register(FeatureFlag)
+class FeatureFlagAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "tenant",
+        "feature",
+        "is_enabled",
+        "rollout_percentage",
+    )
+
+    list_filter = (
+        "is_enabled",
+        "feature",
+    )
+
+    search_fields = (
+        "tenant__name",
+        "feature__name",
+        "feature__code",
+    )
+
+    autocomplete_fields = (
+        "tenant",
+        "feature",
     )
