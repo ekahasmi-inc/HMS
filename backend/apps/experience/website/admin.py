@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Website, WebsiteTheme
+from .models import Website, WebsiteTheme, WebsiteMenu
 
 
 @admin.register(Website)
@@ -49,6 +49,32 @@ class WebsiteThemeAdmin(admin.ModelAdmin):
         "website__name",
         "theme_name",
         "theme_slug",
+    )
+
+    autocomplete_fields = (
+        "website",
+    )
+
+
+@admin.register(WebsiteMenu)
+class WebsiteMenuAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "website",
+        "location",
+        "is_active",
+    )
+
+    list_filter = (
+        "location",
+        "is_active",
+    )
+
+    search_fields = (
+        "name",
+        "slug",
+        "website__name",
     )
 
     autocomplete_fields = (

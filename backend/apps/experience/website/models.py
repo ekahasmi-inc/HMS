@@ -51,3 +51,39 @@ class WebsiteTheme(BaseModel):
 
     def __str__(self):
         return f"{self.website.name} - {self.theme_name}"
+
+
+class WebsiteMenu(BaseModel):
+    """
+    Navigation menu belonging to a website.
+    """
+
+    class MenuLocation(models.TextChoices):
+        HEADER = "HEADER", "Header"
+        FOOTER = "FOOTER", "Footer"
+        MOBILE = "MOBILE", "Mobile"
+        SIDEBAR = "SIDEBAR", "Sidebar"
+        CUSTOM = "CUSTOM", "Custom"
+
+    website = models.ForeignKey(Website, on_delete=models.CASCADE, related_name="menus",)
+    name = models.CharField(max_length=100,)
+    slug = models.SlugField(max_length=100,)
+    location = models.CharField(max_length=20, choices=MenuLocation.choices, default=MenuLocation.HEADER, db_index=True,)
+    is_active = models.BooleanField(default=True, db_index=True,)
+
+    class Meta:
+        db_table = "website_menus"
+
+        ordering = [
+            "name",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["website", "slug"],
+                name="uq_website_menu_slug",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.website.name} - {self.name}"
