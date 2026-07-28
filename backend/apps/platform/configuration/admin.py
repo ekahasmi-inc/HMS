@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db import models
+from django.forms import Textarea
 from .models import (
     ConfigurationCategory,
     ConfigurationKey,
@@ -43,4 +45,12 @@ class ConfigurationKeyAdmin(admin.ModelAdmin):
     ordering = ("category", "display_order", "name",)
     prepopulated_fields = {
         "code": ("name",)
+    }
+    formfield_overrides = {
+        models.JSONField: {
+            "widget": Textarea(attrs={
+                "rows": 6,
+                "cols": 80,
+            })
+        }
     }

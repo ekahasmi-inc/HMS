@@ -45,6 +45,10 @@ class ConfigurationKey(BaseModel):
     description = models.TextField(blank=True,)
     data_type = models.CharField(max_length=20, choices=DataType.choices, default=DataType.STRING, db_index=True,)
     default_value = models.TextField(blank=True, help_text="Stored as text and interpreted according to data_type.",)
+    validation_rules = models.JSONField(default=dict, blank=True,
+        help_text=("Validation metadata such as min/max, regex, "  "allowed values, or length constraints."),)
+    ui_schema = models.JSONField(default=dict, blank=True, 
+        help_text=("UI rendering metadata such as widget type, " "placeholder, help text, grouping, etc."),)
     is_required = models.BooleanField(default=False,)
     is_system = models.BooleanField(default=False, help_text="System keys cannot be deleted.",)
     is_active = models.BooleanField(default=True,)
