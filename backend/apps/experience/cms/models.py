@@ -159,3 +159,32 @@ class Component(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+class Template(BaseModel):
+    """
+    Defines reusable CMS page layouts.
+    """
+    TEMPLATE_TYPES = [
+        ("page", "Page"),
+        ("landing", "Landing Page"),
+        ("listing", "Listing"),
+        ("booking", "Booking Page"),
+        ("custom", "Custom"),
+    ]
+
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=150, unique=True)
+    template_type = models.CharField(max_length=30, choices=TEMPLATE_TYPES, default="page")
+    description = models.TextField(blank=True)
+    layout_schema = models.JSONField(default=dict, blank=True, help_text="Defines template regions and allowed components")
+    default_configuration = models.JSONField(default=dict, blank=True)
+    version = models.CharField(max_length=20, default="1.0.0")
+    is_system = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name

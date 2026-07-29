@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Page, PageRevision, ContentBlock, Component
+from .models import Page, PageRevision, ContentBlock, Component, Template
 
 
 @admin.register(Page)
@@ -123,4 +123,27 @@ class ComponentAdmin(admin.ModelAdmin):
     readonly_fields = (
         "created_at",
         "updated_at",
+    )
+
+
+@admin.register(Template)
+class TemplateAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "template_type",
+        "version",
+        "is_system",
+        "is_active",
+    )
+
+    list_filter = (
+        "template_type",
+        "is_system",
+        "is_active",
+    )
+
+    search_fields = (
+        "name",
+        "slug",
     )
