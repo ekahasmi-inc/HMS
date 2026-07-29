@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Page, PageRevision, ContentBlock
+from .models import Page, PageRevision, ContentBlock, Component
 
 
 @admin.register(Page)
@@ -95,4 +95,32 @@ class ContentBlockAdmin(admin.ModelAdmin):
     ordering = (
         "page",
         "display_order",
+    )
+
+
+@admin.register(Component)
+class ComponentAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "code",
+        "category",
+        "version",
+        "is_system",
+        "is_active",
+    )
+
+    list_filter = (
+        "category",
+        "is_system",
+        "is_active",
+    )
+
+    search_fields = (
+        "name",
+        "code",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
     )

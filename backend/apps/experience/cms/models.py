@@ -1,5 +1,4 @@
 from django.db import models
-
 from apps.platform.common.models import BaseModel
 from apps.experience.website.models import Website
 
@@ -124,3 +123,39 @@ class ContentBlock(BaseModel):
 
     def __str__(self):
         return f"{self.page.title} - {self.identifier}"
+
+
+class Component(BaseModel):
+    """
+    Reusable CMS component definition.
+    """
+    CATEGORY_CHOICES = [
+        ("layout", "Layout"),
+        ("content", "Content"),
+        ("media", "Media"),
+        ("booking", "Booking"),
+        ("marketing", "Marketing"),
+        ("social", "Social"),
+        ("integration", "Integration"),
+        ("utility", "Utility"),
+    ]
+
+    code = models.SlugField(max_length=100, unique=True, help_text="Unique component code (e.g. hero, gallery, youtube-video)")
+    name = models.CharField(max_length=150)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
+    description = models.TextField(blank=True)
+    renderer = models.CharField(max_length=150, help_text="Renderer class identifier")
+    configuration_schema = models.JSONField(default=dict, blank=True)
+    default_configuration = models.JSONField(default=dict, blank=True)
+    version = models.CharField(max_length=20, default="1.0.0")
+    icon = models.CharField(max_length=100, blank=True)
+    is_system = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["category", "name"]
+        verbose_name = "Component"
+        verbose_name_plural = "Components"
+
+    def __str__(self):
+        return self.name
