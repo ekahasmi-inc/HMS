@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "apps.platform.notifications",
     "apps.experience.website",
     "apps.experience.cms",
+    "apps.experience.assets",
 ]
 
 MIDDLEWARE = [
