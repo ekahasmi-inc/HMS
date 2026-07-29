@@ -45,3 +45,41 @@ class Page(BaseModel):
 
     def __str__(self):
         return self.title
+
+from django.conf import settings
+
+
+class PageRevision(BaseModel):
+    """
+    Version history for a page.
+    """
+    class Status(models.TextChoices):
+        DRAFT = "DRAFT", "Draft"
+        PUBLISHED = "PUBLISHED", "Published"
+        ARCHIVED = "ARCHIVED", "Archived"
+
+    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="revisions",)
+    version = models.PositiveIntegerField()
+    title = models.CharField(max_length=255,)
+    notes = models.TextField(blank=True,)
+    content = models.JSONField(default=dict, blank=True, help_text="Serialized page content snapshot.",)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT, db_index=True,)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="page_revisions_created",)
+    published_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="page_revisions_published",)
+    published_at = models.DateTimeField(null=True, blank=True,)
+
+    class Meta:
+        db_table = "page_revisions"
+        ordering = [
+            "-version",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["page", "version"],
+                name="uq_page_revision_version",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.page.title} v{self.version}"
