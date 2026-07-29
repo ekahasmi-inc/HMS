@@ -83,3 +83,44 @@ class PageRevision(BaseModel):
 
     def __str__(self):
         return f"{self.page.title} v{self.version}"
+
+
+class ContentBlock(BaseModel):
+    """
+    Configurable content block belonging to a page.
+    """
+
+    class BlockType(models.TextChoices):
+        HERO = "HERO", "Hero"
+        TEXT = "TEXT", "Text"
+        GALLERY = "GALLERY", "Gallery"
+        IMAGE = "IMAGE", "Image"
+        VIDEO = "VIDEO", "Video"
+        CTA = "CTA", "Call To Action"
+        FAQ = "FAQ", "FAQ"
+        TESTIMONIAL = "TESTIMONIAL", "Testimonial"
+        AMENITIES = "AMENITIES", "Amenities"
+        ROOM_LIST = "ROOM_LIST", "Room List"
+        CONTACT = "CONTACT", "Contact"
+        CUSTOM = "CUSTOM", "Custom"
+
+    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="content_blocks",)
+    block_type = models.CharField(max_length=30, choices=BlockType.choices, db_index=True,)
+    identifier = models.SlugField(max_length=100, help_text="Unique block identifier within the page.",)
+    title = models.CharField(max_length=255, blank=True,)
+    configuration = models.JSONField(default=dict, blank=True, help_text="Block configuration and content.",)
+    display_order = models.PositiveIntegerField(default=0, db_index=True,)
+    is_visible = models.BooleanField(default=True, db_index=True,)
+
+    class Meta:
+        db_table = "content_blocks"
+        ordering = ["display_order",]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["page", "identifier"],
+                name="uq_page_content_block_identifier",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.page.title} - {self.identifier}"

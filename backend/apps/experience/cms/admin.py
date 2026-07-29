@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Page, PageRevision
+from .models import Page, PageRevision, ContentBlock
 
 
 @admin.register(Page)
@@ -63,4 +63,36 @@ class PageRevisionAdmin(admin.ModelAdmin):
 
     ordering = (
         "-version",
+    )
+
+
+@admin.register(ContentBlock)
+class ContentBlockAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "identifier",
+        "page",
+        "block_type",
+        "display_order",
+        "is_visible",
+    )
+
+    list_filter = (
+        "block_type",
+        "is_visible",
+    )
+
+    search_fields = (
+        "identifier",
+        "title",
+        "page__title",
+    )
+
+    autocomplete_fields = (
+        "page",
+    )
+
+    ordering = (
+        "page",
+        "display_order",
     )
