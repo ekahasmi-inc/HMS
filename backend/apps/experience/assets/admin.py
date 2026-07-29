@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import MediaFolder, MediaAsset
+from .models import MediaFolder, MediaAsset, MediaVariant
 
 
 @admin.register(MediaFolder)
@@ -54,4 +54,28 @@ class MediaAssetAdmin(admin.ModelAdmin):
         "name",
         "title",
         "provider_asset_id",
+    )
+
+@admin.register(MediaVariant)
+class MediaVariantAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "asset",
+        "variant_type",
+        "width",
+        "height",
+        "mime_type",
+        "processing_status",
+        "created_at",
+    )
+
+    list_filter = (
+        "variant_type",
+        "processing_status",
+        "mime_type",
+    )
+
+    search_fields = (
+        "asset__name",
+        "asset__title",
     )

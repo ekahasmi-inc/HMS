@@ -90,3 +90,46 @@ class MediaAsset(BaseModel):
     def __str__(self):
         return self.title or self.name
 
+class MediaVariant(BaseModel):
+
+    class VariantType(models.TextChoices):
+        ORIGINAL = "original", "Original"
+        THUMBNAIL = "thumbnail", "Thumbnail"
+        SMALL = "small", "Small"
+        MEDIUM = "medium", "Medium"
+        LARGE = "large", "Large"
+        MOBILE = "mobile", "Mobile"
+        DESKTOP = "desktop", "Desktop"
+        RETINA_2X = "retina_2x", "Retina 2x"
+        RETINA_3X = "retina_3x", "Retina 3x"
+        WEBP = "webp", "WebP"
+        AVIF = "avif", "AVIF"
+        WATERMARK = "watermark", "Watermarked"
+        CROPPED = "cropped", "Cropped"
+        AI_ENHANCED = "ai_enhanced", "AI Enhanced"
+        CUSTOM = "custom", "Custom"
+
+    class ProcessingStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        PROCESSING = "processing", "Processing"
+        READY = "ready", "Ready"
+        FAILED = "failed", "Failed"
+
+    asset = models.ForeignKey(MediaAsset, related_name="variants", on_delete=models.CASCADE,)
+    variant_type = models.CharField(max_length=30, choices=VariantType.choices,)
+    file = models.FileField(upload_to="assets/variants/", blank=True, null=True,)
+    mime_type = models.CharField(max_length=100, blank=True,)
+    width = models.PositiveIntegerField(null=True, blank=True,)
+    height = models.PositiveIntegerField(null=True, blank=True,)
+    file_size = models.BigIntegerField(default=0)
+    processing_status = models.CharField(max_length=20, choices=ProcessingStatus.choices, default=ProcessingStatus.PENDING,)
+    transformation = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "variant_type"],
+                name="uq_media_variant_asset_type",
+            ),
+        ]
+
