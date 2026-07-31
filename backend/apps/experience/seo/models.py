@@ -173,3 +173,39 @@ class Redirect(BaseModel):
         return f"{self.source_path} → {self.destination_path}"
 
 
+class SitemapConfig(BaseModel):
+    """
+    Configuration for XML sitemap generation.
+    """
+
+    class ChangeFrequency(models.TextChoices):
+        ALWAYS = "always", "Always"
+        HOURLY = "hourly", "Hourly"
+        DAILY = "daily", "Daily"
+        WEEKLY = "weekly", "Weekly"
+        MONTHLY = "monthly", "Monthly"
+        YEARLY = "yearly", "Yearly"
+        NEVER = "never", "Never"
+
+    tenant = models.OneToOneField("tenants.Tenant", on_delete=models.CASCADE, related_name="sitemap_config",)
+    enabled = models.BooleanField(default=True,)
+    include_pages = models.BooleanField(default=True,)
+    include_rooms = models.BooleanField(default=True,)
+    include_restaurants = models.BooleanField(default=True,)
+    include_blog_posts = models.BooleanField(default=True,)
+    include_offers = models.BooleanField(default=True,)
+    include_events = models.BooleanField(default=True,)
+    include_gallery = models.BooleanField(default=True,)
+    default_change_frequency = models.CharField(max_length=10, choices=ChangeFrequency.choices, default=ChangeFrequency.WEEKLY,)
+    default_priority = models.DecimalField(max_digits=2, decimal_places=1, default=0.8,)
+    max_urls_per_file = models.PositiveIntegerField(default=50000,)
+    ping_search_engines = models.BooleanField(default=True,)
+    auto_regenerate = models.BooleanField(default=True,)
+    last_generated_at = models.DateTimeField(null=True, blank=True,)
+    notes = models.TextField(blank=True,)
+    
+    class Meta:
+        ordering = ["tenant"]
+
+    def __str__(self):
+        return f"Sitemap - {self.tenant}"

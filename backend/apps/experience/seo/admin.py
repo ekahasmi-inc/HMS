@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import SEOProfile, MetaTemplate, Redirect
+from .models import SEOProfile, MetaTemplate, Redirect, SitemapConfig
 
 
 @admin.register(SEOProfile)
@@ -82,4 +82,27 @@ class RedirectAdmin(admin.ModelAdmin):
 
     ordering = (
         "source_path",
+    )
+
+
+@admin.register(SitemapConfig)
+class SitemapConfigAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "tenant",
+        "enabled",
+        "default_change_frequency",
+        "default_priority",
+        "auto_regenerate",
+        "last_generated_at",
+    )
+
+    list_filter = (
+        "enabled",
+        "auto_regenerate",
+        "ping_search_engines",
+    )
+
+    search_fields = (
+        "tenant__name",
     )
