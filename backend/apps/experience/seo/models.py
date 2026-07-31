@@ -61,3 +61,58 @@ class SEOProfile(BaseModel):
 
     def __str__(self):
         return self.title
+
+
+
+class MetaTemplate(BaseModel):
+    """
+    Dynamic SEO metadata template.
+    """
+    class TemplateType(models.TextChoices):
+        WEBSITE = "website", "Website"
+        PAGE = "page", "Page"
+        ROOM = "room", "Room"
+        RESTAURANT = "restaurant", "Restaurant"
+        BLOG = "blog", "Blog"
+        OFFER = "offer", "Offer"
+        EVENT = "event", "Event"
+        GENERIC = "generic", "Generic"
+
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="meta_templates",)
+    name = models.CharField( max_length=150,)
+    template_type = models.CharField(max_length=30, choices=TemplateType.choices, default=TemplateType.GENERIC,)
+    title_template = models.CharField( max_length=255,)
+    description_template = models.TextField()
+    keyword_template = models.TextField(blank=True,)
+    canonical_template = models.CharField(max_length=500, blank=True,)
+    og_title_template = models.CharField(max_length=255, blank=True,)
+    og_description_template = models.TextField(blank=True,)
+    twitter_title_template = models.CharField( max_length=255,blank=True,)
+    twitter_description_template = models.TextField(blank=True,)
+    available_variables = models.JSONField(default=list, blank=True,)
+    is_default = models.BooleanField(default=False,)
+    is_active = models.BooleanField(default=True,)
+    notes = models.TextField(blank=True,)
+
+    class Meta:
+        ordering = [
+            "template_type",
+            "name",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "name"],
+                name="uq_meta_template_name",
+            )
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["tenant", "template_type"],
+                name="idx_meta_template_type",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.template_type})"

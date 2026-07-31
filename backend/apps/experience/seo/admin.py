@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import SEOProfile
+from .models import SEOProfile, MetaTemplate
 
 
 @admin.register(SEOProfile)
@@ -28,4 +28,32 @@ class SEOProfileAdmin(admin.ModelAdmin):
 
     ordering = (
         "title",
+    )
+
+
+@admin.register(MetaTemplate)
+class MetaTemplateAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "template_type",
+        "tenant",
+        "is_default",
+        "is_active",
+    )
+
+    list_filter = (
+        "template_type",
+        "is_default",
+        "is_active",
+    )
+
+    search_fields = (
+        "name",
+        "title_template",
+    )
+
+    ordering = (
+        "template_type",
+        "name",
     )
