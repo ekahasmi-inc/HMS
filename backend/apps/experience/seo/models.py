@@ -201,9 +201,10 @@ class SitemapConfig(BaseModel):
     max_urls_per_file = models.PositiveIntegerField(default=50000,)
     ping_search_engines = models.BooleanField(default=True,)
     auto_regenerate = models.BooleanField(default=True,)
+    excluded_paths = models.JSONField(default=list, blank=True, help_text="URL paths to exclude from sitemap generation.",)
     last_generated_at = models.DateTimeField(null=True, blank=True,)
     notes = models.TextField(blank=True,)
-    
+
     class Meta:
         ordering = ["tenant"]
 
