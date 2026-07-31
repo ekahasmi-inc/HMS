@@ -116,3 +116,60 @@ class MetaTemplate(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({self.template_type})"
+
+
+class Redirect(BaseModel):
+    """
+    Centralized URL redirect management.
+    """
+    class RedirectType(models.TextChoices):
+        PERMANENT_301 = "301", "301 Permanent"
+        FOUND_302 = "302", "302 Found"
+        TEMPORARY_307 = "307", "307 Temporary"
+        PERMANENT_308 = "308", "308 Permanent"
+
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="redirects",)
+    source_path = models.CharField(max_length=500, help_text="Old URL path (e.g. /rooms/deluxe-room/).",)
+    destination_path = models.CharField(max_length=500, help_text="New URL or absolute URL.",)
+    redirect_type = models.CharField(max_length=3, choices=RedirectType.choices, default=RedirectType.PERMANENT_301,)
+    is_active = models.BooleanField(default=True,)
+    preserve_query_string = models.BooleanField(default=True,)
+    hit_count = models.PositiveBigIntegerField(default=0, editable=False,)
+    last_accessed_at = models.DateTimeField(null=True, blank=True,)
+    notes = models.TextField(blank=True,)
+
+    class Meta:
+        ordering = [
+            "source_path",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "tenant",
+                    "source_path",
+                ],
+                name="uq_redirect_source",
+            )
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "tenant",
+                    "source_path",
+                ],
+                name="idx_redirect_lookup",
+            ),
+            models.Index(
+                fields=[
+                    "is_active",
+                ],
+                name="idx_redirect_active",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.source_path} → {self.destination_path}"
+
+

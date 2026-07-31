@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import SEOProfile, MetaTemplate
+from .models import SEOProfile, MetaTemplate, Redirect
 
 
 @admin.register(SEOProfile)
@@ -56,4 +56,30 @@ class MetaTemplateAdmin(admin.ModelAdmin):
     ordering = (
         "template_type",
         "name",
+    )
+
+@admin.register(Redirect)
+class RedirectAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "source_path",
+        "destination_path",
+        "redirect_type",
+        "tenant",
+        "is_active",
+        "hit_count",
+    )
+
+    list_filter = (
+        "redirect_type",
+        "is_active",
+    )
+
+    search_fields = (
+        "source_path",
+        "destination_path",
+    )
+
+    ordering = (
+        "source_path",
     )
