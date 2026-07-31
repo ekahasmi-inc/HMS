@@ -7,6 +7,7 @@ from .models import Page, PageRevision, ContentBlock, Component, Template
 class PageAdmin(admin.ModelAdmin):
 
     list_display = (
+        "id",
         "title",
         "website",
         "status",

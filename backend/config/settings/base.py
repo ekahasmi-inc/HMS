@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.experience.website",
     "apps.experience.cms",
     "apps.experience.assets",
+    "apps.experience.seo",
 ]
 
 MIDDLEWARE = [

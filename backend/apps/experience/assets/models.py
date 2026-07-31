@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from apps.platform.common.models import BaseModel
 from apps.platform.tenants.models import Tenant
 
@@ -133,3 +134,61 @@ class MediaVariant(BaseModel):
             ),
         ]
 
+
+
+class MediaReference(BaseModel):
+
+    class ReferenceType(models.TextChoices):
+        PRIMARY = "primary", "Primary"
+        GALLERY = "gallery", "Gallery"
+        LOGO = "logo", "Logo"
+        FAVICON = "favicon", "Favicon"
+        HERO = "hero", "Hero"
+        BACKGROUND = "background", "Background"
+        ICON = "icon", "Icon"
+        THUMBNAIL = "thumbnail", "Thumbnail"
+        ATTACHMENT = "attachment", "Attachment"
+        VIDEO = "video", "Video"
+        DOCUMENT = "document", "Document"
+        OTHER = "other", "Other"
+
+
+    asset = models.ForeignKey(MediaAsset, related_name="references", on_delete=models.CASCADE,)
+    # Generic relationship
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,)
+    object_id = models.UUIDField()
+    content_object = GenericForeignKey( "content_type", "object_id",)
+
+    reference_type = models.CharField( max_length=30, choices=ReferenceType.choices,default=ReferenceType.PRIMARY,)
+    order = models.PositiveIntegerField(default=0)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = [
+            "order",
+            "-created_at",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "asset",
+                    "content_type",
+                    "object_id",
+                    "reference_type",
+                ],
+                name="uq_media_reference_target_type",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "content_type",
+                    "object_id",
+                ],
+                name="idx_media_reference_object",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.asset} ({self.reference_type})"

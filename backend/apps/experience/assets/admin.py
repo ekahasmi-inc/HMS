@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import MediaFolder, MediaAsset, MediaVariant
+from .models import MediaFolder, MediaAsset, MediaVariant, MediaReference
 
 
 @admin.register(MediaFolder)
@@ -78,4 +78,30 @@ class MediaVariantAdmin(admin.ModelAdmin):
     search_fields = (
         "asset__name",
         "asset__title",
+    )
+
+@admin.register(MediaReference)
+class MediaReferenceAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "asset",
+        "reference_type",
+        "content_type",
+        "object_id",
+        "order",
+        "created_at",
+    )
+
+    list_filter = (
+        "reference_type",
+        "content_type",
+    )
+
+    search_fields = (
+        "asset__name",
+        "asset__title",
+    )
+
+    ordering = (
+        "order",
     )
