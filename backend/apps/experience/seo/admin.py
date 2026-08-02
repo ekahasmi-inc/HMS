@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import SEOProfile, MetaTemplate, Redirect, SitemapConfig
+from .models import SEOProfile, MetaTemplate, Redirect, SitemapConfig, StructuredData
 
 
 @admin.register(SEOProfile)
@@ -105,4 +105,31 @@ class SitemapConfigAdmin(admin.ModelAdmin):
 
     search_fields = (
         "tenant__name",
+    )
+
+@admin.register(StructuredData)
+class StructuredDataAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "tenant",
+        "schema_type",
+        "is_active",
+        "is_default",
+    )
+
+    list_filter = (
+        "schema_type",
+        "content_type",
+        "is_active",
+        "is_default",
+    )
+
+    search_fields = (
+        "name",
+        "tenant__name",
+    )
+
+    autocomplete_fields = (
+        "tenant",
     )

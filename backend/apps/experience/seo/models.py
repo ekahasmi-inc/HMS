@@ -95,10 +95,7 @@ class MetaTemplate(BaseModel):
     notes = models.TextField(blank=True,)
 
     class Meta:
-        ordering = [
-            "template_type",
-            "name",
-        ]
+        ordering = ["template_type", "name",]
 
         constraints = [
             models.UniqueConstraint(
@@ -139,32 +136,22 @@ class Redirect(BaseModel):
     notes = models.TextField(blank=True,)
 
     class Meta:
-        ordering = [
-            "source_path",
-        ]
+        ordering = ["source_path",]
 
         constraints = [
             models.UniqueConstraint(
-                fields=[
-                    "tenant",
-                    "source_path",
-                ],
+                fields=["tenant", "source_path",],
                 name="uq_redirect_source",
             )
         ]
 
         indexes = [
             models.Index(
-                fields=[
-                    "tenant",
-                    "source_path",
-                ],
+                fields=["tenant", "source_path",],
                 name="idx_redirect_lookup",
             ),
             models.Index(
-                fields=[
-                    "is_active",
-                ],
+                fields=["is_active",],
                 name="idx_redirect_active",
             ),
         ]
@@ -210,3 +197,64 @@ class SitemapConfig(BaseModel):
 
     def __str__(self):
         return f"Sitemap - {self.tenant}"
+
+
+class StructuredData(BaseModel):
+    """
+    Reusable Schema.org JSON-LD definitions.
+    """
+    class SchemaType(models.TextChoices):
+        WEBSITE = "website", "Website"
+        WEBPAGE = "webpage", "WebPage"
+        ORGANIZATION = "organization", "Organization"
+        LOCAL_BUSINESS = "local_business", "LocalBusiness"
+        HOTEL = "hotel", "Hotel"
+        LODGING_BUSINESS = "lodging_business", "LodgingBusiness"
+        RESTAURANT = "restaurant", "Restaurant"
+        ROOM = "room", "Room"
+        FAQ = "faq", "FAQPage"
+        BREADCRUMB = "breadcrumb", "BreadcrumbList"
+        EVENT = "event", "Event"
+        REVIEW = "review", "Review"
+        OFFER = "offer", "Offer"
+        PRODUCT = "product", "Product"
+        ARTICLE = "article", "Article"
+        BLOG_POST = "blog_post", "BlogPosting"
+        VIDEO = "video", "VideoObject"
+        IMAGE = "image", "ImageObject"
+        CUSTOM = "custom", "Custom"
+
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="structured_data",)
+    name = models.CharField(max_length=200,)
+    schema_type = models.CharField(max_length=30, choices=SchemaType.choices,)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,)
+    object_id = models.UUIDField()
+    content_object = GenericForeignKey("content_type", "object_id",)
+    schema_json = models.JSONField(default=dict,)
+    is_active = models.BooleanField(default=True,)
+    is_default = models.BooleanField(default=False,)
+    notes = models.TextField(blank=True,)
+
+    class Meta:
+        ordering = ["schema_type", "name"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["content_type", "object_id", "schema_type",],
+                name="uq_structured_data_object_schema",
+            )
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["content_type", "object_id",],
+                name="idx_structured_lookup",
+            ),
+            models.Index(
+                fields=["tenant", "schema_type",],
+                name="idx_structured_tenant_type",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.schema_type})"
