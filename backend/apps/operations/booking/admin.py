@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import (
     Property,
     PropertyAmenity,
+    Building,
 )
 
 @admin.register(Property)
@@ -72,3 +73,36 @@ class PropertyAmenityAdmin(admin.ModelAdmin):
         "display_order",
         "name",
     )
+
+
+@admin.register(Building)
+class BuildingAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "property",
+        "code",
+        "total_floors",
+        "status",
+        "sort_order",
+    )
+
+    list_filter = (
+        "status",
+        "property",
+    )
+
+    search_fields = (
+        "name",
+        "code",
+        "property__name",
+    )
+
+    ordering = (
+        "property",
+        "sort_order",
+        "name",
+    )
+
+    prepopulated_fields = {
+        "slug": ("name",),
+    }

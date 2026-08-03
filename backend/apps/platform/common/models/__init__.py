@@ -1,4 +1,5 @@
 from .base import BaseModel
+from .timestamp import TimeStampedModel
 
 from .mixins import (
     UUIDMixin,

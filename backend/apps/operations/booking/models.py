@@ -1,5 +1,6 @@
 from django.db import models
-
+from apps.platform.common.models import TimeStampedModel
+from apps.platform.tenants.models import Tenant
 from apps.platform.common.models import BaseModel
 
 
@@ -123,6 +124,56 @@ class PropertyAmenity(BaseModel):
             models.Index(
                 fields=["category",],
                 name="idx_prop_amn_cat",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.property.name} - {self.name}"
+
+
+class Building(TimeStampedModel):
+    """
+    Physical building within a property.
+    """
+    class BuildingStatus(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+        UNDER_CONSTRUCTION = "under_construction", "Under Construction"
+        CLOSED = "closed", "Closed"
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="buildings",)
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200)
+    code = models.CharField(max_length=30, blank=True,)
+    description = models.TextField(blank=True,)
+    building_number = models.CharField(max_length=50, blank=True,)
+    total_floors = models.PositiveIntegerField(default=1,)
+    status = models.CharField(max_length=30, choices=BuildingStatus.choices, default=BuildingStatus.ACTIVE,)
+    sort_order = models.PositiveIntegerField(default=0,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["sort_order", "name",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["property", "slug"],
+                name="uq_building_property_slug",
+            ),
+            models.UniqueConstraint(
+                fields=["property", "name"],
+                name="uq_building_property_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["property", "status"],
+                name="idx_building_property_status",
+            ),
+            models.Index(
+                fields=["property", "sort_order"],
+                name="idx_building_property_order",
             ),
         ]
 
