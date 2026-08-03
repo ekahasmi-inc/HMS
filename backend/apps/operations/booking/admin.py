@@ -3,6 +3,7 @@ from .models import (
     Property,
     PropertyAmenity,
     Building,
+    Floor,
 )
 
 @admin.register(Property)
@@ -105,4 +106,37 @@ class BuildingAdmin(admin.ModelAdmin):
 
     prepopulated_fields = {
         "slug": ("name",),
+    }
+
+@admin.register(Floor)
+class FloorAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "building",
+        "floor_number",
+        "floor_type",
+        "status",
+        "sort_order",
+    )
+
+    list_filter = (
+        "status",
+        "floor_type",
+        "building",
+    )
+
+    search_fields = (
+        "name",
+        "building__name",
+    )
+
+    ordering = (
+        "building",
+        "sort_order",
+        "floor_number",
+    )
+
+    prepopulated_fields = {
+        "slug": ("name",)
     }

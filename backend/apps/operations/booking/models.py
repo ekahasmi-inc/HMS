@@ -192,3 +192,72 @@ class Building(TimeStampedModel):
     def __str__(self):
         return f"{self.property.name} - {self.name}"
 
+from django.db import models
+
+from apps.platform.common.models import TimeStampedModel
+
+
+class Floor(TimeStampedModel):
+    """
+    Physical floor within a building.
+    """
+    class FloorType(models.TextChoices):
+
+        BASEMENT = "basement", "Basement"
+        GROUND = "ground", "Ground Floor"
+        FIRST = "first", "First Floor"
+        SECOND = "second", "Second Floor"
+        THIRD = "third", "Third Floor"
+        TERRACE = "terrace", "Terrace"
+        OTHER = "other", "Other"
+
+    class FloorStatus(models.TextChoices):
+
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+        UNDER_MAINTENANCE = "under_maintenance", "Under Maintenance"
+        CLOSED = "closed", "Closed"
+
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="floors",)
+    name = models.CharField(max_length=200,)
+    slug = models.SlugField( max_length=200,)
+    floor_number = models.IntegerField(default=0, help_text="0 = Ground Floor",)
+    floor_type = models.CharField(max_length=30, choices=FloorType.choices, default=FloorType.GROUND,)
+    description = models.TextField(blank=True,)
+    status = models.CharField(max_length=30, choices=FloorStatus.choices, default=FloorStatus.ACTIVE,)
+    sort_order = models.PositiveIntegerField(default=0,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["sort_order", "floor_number", "name",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["building", "slug",],
+                name="uq_floor_building_slug",
+            ),
+
+            models.UniqueConstraint(
+                fields=["building", "floor_number",],
+                name="uq_floor_building_number",
+            ),
+        ]
+
+        indexes = [
+
+            models.Index(
+                fields=["building", "status",],
+                name="idx_floor_building_status",
+            ),
+
+            models.Index(
+                fields=["building", "sort_order",],
+                name="idx_floor_building_order",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.building.name} - {self.name}"
+        )
+
