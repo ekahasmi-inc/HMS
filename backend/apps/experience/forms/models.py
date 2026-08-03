@@ -190,3 +190,39 @@ class FormSubmission(BaseModel):
 
     def __str__(self):
         return f"{self.form.name} - {self.submitter_name or 'Anonymous'}"
+
+
+class FormSubmissionValue(BaseModel):
+    """
+    Stores one submitted value for one field.
+    """
+    submission = models.ForeignKey("FormSubmission", on_delete=models.CASCADE, related_name="values",)
+    field = models.ForeignKey("FormField", on_delete=models.CASCADE, related_name="submitted_values",)
+    value = models.TextField(blank=True, help_text="Primary value storage.",)
+    json_value = models.JSONField(default=dict, blank=True, help_text="Structured values for complex field types.",)
+    media_reference = models.ForeignKey("assets.MediaReference", null=True, blank=True, on_delete=models.SET_NULL, related_name="form_submission_values", help_text="Uploaded file/image reference.",)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["field__display_order", "id",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["submission", "field",],
+                name="uq_submission_field",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["submission",],
+                name="idx_submissionvalue_submission",
+            ),
+            models.Index(
+                fields=["field",],
+                name="idx_submissionvalue_field",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.submission} - {self.field.label}"

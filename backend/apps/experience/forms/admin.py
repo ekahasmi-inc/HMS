@@ -3,6 +3,7 @@ from .models import (
     Form,
     FormField,
     FormSubmission,
+    FormSubmissionValue,
 )
 
 
@@ -113,3 +114,30 @@ class FormSubmissionAdmin(admin.ModelAdmin):
     ordering = (
         "-submitted_at",
     )
+
+
+@admin.register(FormSubmissionValue)
+class FormSubmissionValueAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "submission",
+        "field",
+        "short_value",
+    )
+
+    search_fields = (
+        "value",
+        "field__label",
+    )
+
+    autocomplete_fields = (
+        "submission",
+        "field",
+        "media_reference",
+    )
+
+    def short_value(self, obj):
+        if obj.value:
+            return obj.value[:60]
+        return "-"
+    short_value.short_description = "Value"
