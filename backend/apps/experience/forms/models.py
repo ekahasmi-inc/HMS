@@ -226,3 +226,60 @@ class FormSubmissionValue(BaseModel):
 
     def __str__(self):
         return f"{self.submission} - {self.field.label}"
+
+
+class FormAction(BaseModel):
+    """
+    Workflow executed after successful form submission.
+
+    Defines WHAT should happen.
+    Execution is handled by FormActionService.
+    """
+    class ActionType(models.TextChoices):
+        EMAIL = "email", "Email"
+        NOTIFICATION = "notification", "Notification"
+        CRM = "crm", "CRM Lead"
+        WEBHOOK = "webhook", "Webhook"
+        AUTOMATION = "automation", "Automation Workflow"
+        AI = "ai", "AI Processing"
+        REDIRECT = "redirect", "Redirect"
+        CUSTOM = "custom", "Custom"
+
+    class TriggerEvent(models.TextChoices):
+        ON_SUBMIT = "on_submit", "On Submit"
+        ON_APPROVAL = "on_approval", "On Approval"
+        ON_REJECTION = "on_rejection", "On Rejection"
+
+    form = models.ForeignKey("Form", on_delete=models.CASCADE, related_name="actions",)
+    name = models.CharField(max_length=200,)
+    action_type = models.CharField(max_length=30, choices=ActionType.choices,)
+    trigger_event = models.CharField(max_length=30, choices=TriggerEvent.choices, default=TriggerEvent.ON_SUBMIT,)
+    execution_order = models.PositiveIntegerField(default=1, help_text="Lower numbers execute first.",)
+    is_active = models.BooleanField(default=True,)
+    configuration = models.JSONField(default=dict, blank=True, help_text="Action-specific configuration.",)
+    conditions = models.JSONField(default=dict, blank=True, help_text="Optional execution conditions.",)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ("execution_order", "id",)
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("form", "name",),
+                name="uq_form_action_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=("form", "is_active"),
+                name="idx_formaction_form_active",
+            ),
+            models.Index(
+                fields=("action_type",),
+                name="idx_formaction_type",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.form.name} - {self.name}"

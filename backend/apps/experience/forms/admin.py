@@ -4,8 +4,8 @@ from .models import (
     FormField,
     FormSubmission,
     FormSubmissionValue,
+    FormAction,
 )
-
 
 @admin.register(Form)
 class FormAdmin(admin.ModelAdmin):
@@ -141,3 +141,36 @@ class FormSubmissionValueAdmin(admin.ModelAdmin):
             return obj.value[:60]
         return "-"
     short_value.short_description = "Value"
+
+
+@admin.register(FormAction)
+class FormActionAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "form",
+        "name",
+        "action_type",
+        "trigger_event",
+        "execution_order",
+        "is_active",
+    )
+
+    list_filter = (
+        "action_type",
+        "trigger_event",
+        "is_active",
+    )
+
+    search_fields = (
+        "name",
+        "form__name",
+    )
+
+    autocomplete_fields = (
+        "form",
+    )
+
+    ordering = (
+        "form",
+        "execution_order",
+    )
