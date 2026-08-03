@@ -2,6 +2,9 @@ from django.db import models
 from apps.platform.common.models import TimeStampedModel
 from apps.platform.tenants.models import Tenant
 from apps.platform.common.models import BaseModel
+from django.utils.text import slugify
+
+
 
 
 class Property(BaseModel):
@@ -135,6 +138,14 @@ class Building(TimeStampedModel):
     """
     Physical building within a property.
     """
+    class BuildingType(models.TextChoices):
+
+        MAIN = "main", "Main Building"
+        VILLA = "villa", "Villa"
+        BLOCK = "block", "Block"
+        COTTAGE = "cottage", "Cottage"
+        OTHER = "other", "Other"
+
     class BuildingStatus(models.TextChoices):
         ACTIVE = "active", "Active"
         INACTIVE = "inactive", "Inactive"
@@ -145,6 +156,7 @@ class Building(TimeStampedModel):
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200)
     code = models.CharField(max_length=30, blank=True,)
+    building_type = models.CharField(max_length=30, choices=BuildingType.choices, default=BuildingType.MAIN,)
     description = models.TextField(blank=True,)
     building_number = models.CharField(max_length=50, blank=True,)
     total_floors = models.PositiveIntegerField(default=1,)
@@ -179,3 +191,4 @@ class Building(TimeStampedModel):
 
     def __str__(self):
         return f"{self.property.name} - {self.name}"
+
