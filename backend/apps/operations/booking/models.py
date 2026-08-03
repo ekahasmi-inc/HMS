@@ -381,3 +381,64 @@ class RoomAmenity(TimeStampedModel):
 
     def __str__(self):
         return f"{self.room_type.name} - {self.name}"
+
+
+class Room(TimeStampedModel):
+    """
+    Individual physical room / inventory unit.
+    """
+    class RoomStatus(models.TextChoices):
+        AVAILABLE = "available", "Available"
+        OCCUPIED = "occupied", "Occupied"
+        OUT_OF_ORDER = "out_of_order", "Out of Order"
+        MAINTENANCE = "maintenance", "Maintenance"
+        BLOCKED = "blocked", "Blocked"
+        INACTIVE = "inactive", "Inactive"
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="rooms",)
+    building = models.ForeignKey(Building, on_delete=models.SET_NULL, related_name="rooms", null=True, blank=True,)
+    floor = models.ForeignKey(Floor, on_delete=models.SET_NULL, related_name="rooms", null=True, blank=True,)
+    room_type = models.ForeignKey(RoomType, on_delete=models.PROTECT, related_name="rooms",)
+    room_number = models.CharField(max_length=30,)
+    room_name = models.CharField(max_length=200, blank=True,)
+    slug = models.SlugField(max_length=200,)
+    status = models.CharField(max_length=30, choices=RoomStatus.choices, default=RoomStatus.AVAILABLE,)
+    max_adults = models.PositiveSmallIntegerField(default=2,)
+    max_children = models.PositiveSmallIntegerField(default=2,)
+    is_smoking = models.BooleanField(default=False,)
+    is_accessible = models.BooleanField(default=False,)
+    notes = models.TextField(blank=True,)
+    sort_order = models.PositiveIntegerField(default=0,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["sort_order", "room_number",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["property", "room_number"],
+                name="uq_room_property_number",
+            ),
+            models.UniqueConstraint(
+                fields=["property", "slug"],
+                name="uq_room_property_slug",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["property", "status"],
+                name="idx_room_property_status",
+            ),
+            models.Index(
+                fields=["room_type", "status"],
+                name="idx_room_roomtype_status",
+            ),
+            models.Index(
+                fields=["building", "floor"],
+                name="idx_room_building_floor",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.property.name} - {self.room_number}"
