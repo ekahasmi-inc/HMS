@@ -327,3 +327,57 @@ class RoomType(TimeStampedModel):
         return f"{self.property.name} - {self.name}"
 
 
+class RoomAmenity(TimeStampedModel):
+    """
+    Amenities available for a RoomType.
+    """
+    class AmenityCategory(models.TextChoices):
+        BEDROOM = "bedroom", "Bedroom"
+        BATHROOM = "bathroom", "Bathroom"
+        ENTERTAINMENT = "entertainment", "Entertainment"
+        INTERNET = "internet", "Internet"
+        FOOD_BEVERAGE = "food_beverage", "Food & Beverage"
+        COMFORT = "comfort", "Comfort"
+        SAFETY = "safety", "Safety"
+        ACCESSIBILITY = "accessibility", "Accessibility"
+        OUTDOOR = "outdoor", "Outdoor"
+        OTHER = "other", "Other"
+
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name="amenities",)
+    name = models.CharField(max_length=200,)
+    slug = models.SlugField(max_length=200,)
+    category = models.CharField(max_length=30, choices=AmenityCategory.choices, default=AmenityCategory.COMFORT,)
+    description = models.TextField(blank=True,)
+    icon = models.CharField(max_length=100, blank=True, help_text="Bootstrap or FontAwesome icon",)
+    is_featured = models.BooleanField(default=False,)
+    sort_order = models.PositiveIntegerField(default=0,)
+    is_active = models.BooleanField(default=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["sort_order", "name",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["room_type", "slug"],
+                name="uq_roomamenity_roomtype_slug",
+            ),
+            models.UniqueConstraint(
+                fields=["room_type", "name"],
+                name="uq_roomamenity_roomtype_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["room_type", "category"],
+                name="idx_roomamenity_category",
+            ),
+            models.Index(
+                fields=["room_type", "is_active"],
+                name="idx_roomamenity_active",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.room_type.name} - {self.name}"
