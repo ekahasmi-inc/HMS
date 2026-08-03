@@ -1,6 +1,9 @@
 from django.contrib import admin
-
-from .models import Form, FormField
+from .models import (
+    Form,
+    FormField,
+    FormSubmission,
+)
 
 
 @admin.register(Form)
@@ -72,3 +75,41 @@ class FormFieldAdmin(admin.ModelAdmin):
     prepopulated_fields = {
         "slug": ("label",)
     }
+
+@admin.register(FormSubmission)
+class FormSubmissionAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "form",
+        "submitter_name",
+        "submitter_email",
+        "status",
+        "submitted_at",
+        "is_spam",
+    )
+
+    list_filter = (
+        "status",
+        "is_spam",
+        "submitted_at",
+    )
+
+    search_fields = (
+        "submitter_name",
+        "submitter_email",
+        "submitter_phone",
+    )
+
+    autocomplete_fields = (
+        "tenant",
+        "form",
+        "submitted_by",
+    )
+
+    readonly_fields = (
+        "submitted_at",
+    )
+
+    ordering = (
+        "-submitted_at",
+    )

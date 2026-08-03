@@ -136,3 +136,57 @@ class FormField(BaseModel):
         return f"{self.form.name} - {self.label}"
 
 
+from django.conf import settings
+
+
+class FormSubmission(BaseModel):
+    """
+    Represents one submitted form.
+    Field values are stored separately in FormSubmissionValue.
+    """
+    class SubmissionStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        NEW = "new", "New"
+        IN_PROGRESS = "in_progress", "In Progress"
+        RESOLVED = "resolved", "Resolved"
+        CLOSED = "closed", "Closed"
+        SPAM = "spam", "Spam"
+
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="form_submissions",)
+    form = models.ForeignKey( "Form", on_delete=models.CASCADE, related_name="submissions",)
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="submitted_forms",)
+    status = models.CharField(max_length=20, choices=SubmissionStatus.choices, default=SubmissionStatus.NEW,)
+    submitter_name = models.CharField(max_length=255, blank=True,)
+    submitter_email = models.EmailField(blank=True,)
+    submitter_phone = models.CharField(max_length=30, blank=True,)
+    ip_address = models.GenericIPAddressField(null=True, blank=True,)
+    user_agent = models.TextField( blank=True,)
+    referrer = models.URLField(blank=True,)
+    source = models.CharField(max_length=100, blank=True, help_text="Website, QR Code, Facebook, Instagram, Google, etc.",)
+    is_spam = models.BooleanField(default=False,)
+    spam_score = models.DecimalField( max_digits=5, decimal_places=2, default=0,)
+    submitted_at = models.DateTimeField( auto_now_add=True,)
+    reviewed_at = models.DateTimeField(null=True, blank=True,)
+    notes = models.TextField( blank=True,)
+    metadata = models.JSONField( default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["-submitted_at",]
+
+        indexes = [
+            models.Index(
+                fields=["tenant", "status"],
+                name="idx_submission_status",
+            ),
+            models.Index(
+                fields=["form", "submitted_at"],
+                name="idx_submission_form_date",
+            ),
+            models.Index(
+                fields=["submitter_email"],
+                name="idx_submission_email",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.form.name} - {self.submitter_name or 'Anonymous'}"
