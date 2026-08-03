@@ -73,3 +73,58 @@ class Property(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+class PropertyAmenity(BaseModel):
+    """
+    Property-level facilities and services.
+    """
+    class Category(models.TextChoices):
+        GENERAL = "general", "General"
+        DINING = "dining", "Dining"
+        WELLNESS = "wellness", "Wellness"
+        RECREATION = "recreation", "Recreation"
+        BUSINESS = "business", "Business"
+        TRANSPORT = "transport", "Transport"
+        ACCESSIBILITY = "accessibility", "Accessibility"
+        SAFETY = "safety", "Safety"
+        OTHER = "other", "Other"
+
+    property = models.ForeignKey("Property", on_delete=models.CASCADE, related_name="amenities",)
+    name = models.CharField(max_length=150,)
+    slug = models.SlugField(max_length=150,)
+    category = models.CharField(max_length=30, choices=Category.choices, default=Category.GENERAL,)
+    description = models.TextField(blank=True,)
+    icon = models.CharField(max_length=100, blank=True, help_text="Icon name (Font Awesome, Material Icons, etc.)",)
+    display_order = models.PositiveIntegerField(default=1,)
+    is_featured = models.BooleanField(default=False,)
+    is_active = models.BooleanField(default=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ("display_order","name",)
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["property","slug",],
+                name="uq_property_amenity_slug",
+            ),
+            models.UniqueConstraint(
+                fields=["property","name",],
+                name="uq_property_amenity_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["property","is_active",],
+                name="idx_prop_amn_active",
+            ),
+            models.Index(
+                fields=["category",],
+                name="idx_prop_amn_cat",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.property.name} - {self.name}"
