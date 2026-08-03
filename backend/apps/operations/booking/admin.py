@@ -4,6 +4,7 @@ from .models import (
     PropertyAmenity,
     Building,
     Floor,
+    RoomType,
 )
 
 @admin.register(Property)
@@ -135,6 +136,41 @@ class FloorAdmin(admin.ModelAdmin):
         "building",
         "sort_order",
         "floor_number",
+    )
+
+    prepopulated_fields = {
+        "slug": ("name",)
+    }
+
+@admin.register(RoomType)
+class RoomTypeAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "property",
+        "category",
+        "base_occupancy",
+        "max_occupancy",
+        "status",
+        "sort_order",
+    )
+
+    list_filter = (
+        "property",
+        "category",
+        "status",
+    )
+
+    search_fields = (
+        "name",
+        "code",
+        "property__name",
+    )
+
+    ordering = (
+        "property",
+        "sort_order",
+        "name",
     )
 
     prepopulated_fields = {

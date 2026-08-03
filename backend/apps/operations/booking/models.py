@@ -261,3 +261,69 @@ class Floor(TimeStampedModel):
             f"{self.building.name} - {self.name}"
         )
 
+
+class RoomType(TimeStampedModel):
+    """
+    Sellable room category.
+    """
+    class RoomCategory(models.TextChoices):
+        STANDARD = "standard", "Standard"
+        DELUXE = "deluxe", "Deluxe"
+        PREMIUM = "premium", "Premium"
+        SUITE = "suite", "Suite"
+        VILLA = "villa", "Villa"
+        FAMILY = "family", "Family"
+        DORMITORY = "dormitory", "Dormitory"
+        OTHER = "other", "Other"
+
+    class RoomTypeStatus(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+        COMING_SOON = "coming_soon", "Coming Soon"
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="room_types",)
+    name = models.CharField(max_length=200,)
+    slug = models.SlugField(max_length=200,)
+    code = models.CharField(max_length=30, blank=True,)
+    category = models.CharField(max_length=30, choices=RoomCategory.choices, default=RoomCategory.STANDARD,)
+    short_description = models.CharField(max_length=255, blank=True,)
+    description = models.TextField(blank=True,)
+    base_occupancy = models.PositiveSmallIntegerField(default=2,)
+    max_occupancy = models.PositiveSmallIntegerField(default=2,)
+    max_adults = models.PositiveSmallIntegerField(default=2,)
+    max_children = models.PositiveSmallIntegerField(default=0,)
+    room_size = models.DecimalField(max_digits=8, decimal_places=2, help_text="Area in square feet",)
+    bed_configuration = models.CharField(max_length=100, blank=True,)
+    status = models.CharField(max_length=30, choices=RoomTypeStatus.choices, default=RoomTypeStatus.ACTIVE,)
+    sort_order = models.PositiveIntegerField(default=0,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["sort_order", "name",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["property", "slug"],
+                name="uq_roomtype_property_slug",
+            ),
+            models.UniqueConstraint(
+                fields=["property", "name"],
+                name="uq_roomtype_property_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["property", "status"],
+                name="idx_roomtype_property_status",
+            ),
+            models.Index(
+                fields=["property", "category"],
+                name="idx_roomtype_property_category",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.property.name} - {self.name}"
+
+
