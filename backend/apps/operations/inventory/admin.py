@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import InventoryCalendar
+from .models import InventoryCalendar, InventoryBlock
 
 
 @admin.register(InventoryCalendar)
@@ -30,3 +30,30 @@ class InventoryCalendarAdmin(admin.ModelAdmin):
     )
 
     date_hierarchy = "date"
+
+
+@admin.register(InventoryBlock)
+class InventoryBlockAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "title",
+        "room",
+        "block_type",
+        "start_date",
+        "end_date",
+        "status",
+    )
+
+    list_filter = (
+        "block_type",
+        "status",
+    )
+
+    search_fields = (
+        "title",
+        "room__room_number",
+    )
+
+    ordering = (
+        "-start_date",
+    )
