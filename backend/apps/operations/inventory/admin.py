@@ -1,7 +1,9 @@
 from django.contrib import admin
-
-from .models import InventoryCalendar, InventoryBlock
-
+from .models import (
+    InventoryCalendar,
+    InventoryBlock,
+    InventoryAdjustment,
+)
 
 @admin.register(InventoryCalendar)
 class InventoryCalendarAdmin(admin.ModelAdmin):
@@ -56,4 +58,36 @@ class InventoryBlockAdmin(admin.ModelAdmin):
 
     ordering = (
         "-start_date",
+    )
+
+
+@admin.register(InventoryAdjustment)
+class InventoryAdjustmentAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "inventory",
+        "adjustment_type",
+        "previous_status",
+        "new_status",
+        "adjusted_by",
+        "created_at",
+    )
+
+    list_filter = (
+        "adjustment_type",
+    )
+
+    search_fields = (
+        "inventory__room__room_number",
+        "reason",
+        "reference_id",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "-created_at",
     )

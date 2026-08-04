@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from apps.platform.common.models import TimeStampedModel
 from apps.operations.booking.models import Room
 
@@ -114,3 +115,55 @@ class InventoryBlock(TimeStampedModel):
 
     def __str__(self):
         return f"{self.room.room_number} | {self.title}"
+
+
+class InventoryAdjustment(TimeStampedModel):
+    """
+    Audit log for inventory changes.
+    """
+    class AdjustmentType(models.TextChoices):
+        MANUAL = "manual", "Manual"
+        BOOKING = "booking", "Booking"
+        OTA_SYNC = "ota_sync", "OTA Sync"
+        HOUSEKEEPING = "housekeeping", "Housekeeping"
+        MAINTENANCE = "maintenance", "Maintenance"
+        AI = "ai", "AI Recommendation"
+        SYSTEM = "system", "System"
+        OTHER = "other", "Other"
+
+    inventory = models.ForeignKey(InventoryCalendar, on_delete=models.CASCADE, related_name="adjustments",)
+    adjustment_type = models.CharField(max_length=30, choices=AdjustmentType.choices,)
+    previous_status = models.CharField(max_length=30, choices=InventoryCalendar.InventoryStatus.choices,)
+    new_status = models.CharField(max_length=30, choices=InventoryCalendar.InventoryStatus.choices,)
+    previous_available_count = models.PositiveIntegerField()
+    new_available_count = models.PositiveIntegerField()
+    reason = models.CharField(max_length=255,)
+    notes = models.TextField(blank=True,)
+    adjusted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="inventory_adjustments",)
+    reference_id = models.CharField(max_length=100, blank=True, help_text="Booking ID / OTA ID / Ticket ID / External Reference",)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["-created_at",]
+
+        indexes = [
+            models.Index(
+                fields=["inventory"],
+                name="idx_adjustment_inventory",
+            ),
+            models.Index(
+                fields=["adjustment_type"],
+                name="idx_adjustment_type",
+            ),
+            models.Index(
+                fields=["created_at"],
+                name="idx_adjustment_created",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.inventory.room.room_number} | "
+            f"{self.adjustment_type} | "
+            f"{self.created_at:%Y-%m-%d %H:%M}"
+        )
