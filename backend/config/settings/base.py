@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "apps.experience.seo",
     "apps.experience.forms",
     "apps.operations.booking",
+    "apps.operations.inventory",
 ]
 
 MIDDLEWARE = [
