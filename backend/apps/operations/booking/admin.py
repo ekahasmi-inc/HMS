@@ -8,6 +8,7 @@ from .models import (
     RoomAmenity,
     Room,
     Guest,
+    Reservation,
 )
 
 @admin.register(Property)
@@ -283,5 +284,47 @@ class GuestAdmin(admin.ModelAdmin):
         "last_name",
         "phone",
         "email",
+
+    )
+
+
+@admin.register(Reservation)
+class ReservationAdmin(admin.ModelAdmin):
+
+    list_display = (
+
+        "booking_number",
+        "guest",
+        "property",
+        "check_in",
+        "check_out",
+        "status",
+        "total_amount",
+
+    )
+
+
+    list_filter = (
+
+        "status",
+        "booking_source",
+        "property",
+
+    )
+
+
+    search_fields = (
+
+        "booking_number",
+        "guest__first_name",
+        "guest__phone",
+        "guest__email",
+
+    )
+
+
+    ordering = (
+
+        "-created_at",
 
     )

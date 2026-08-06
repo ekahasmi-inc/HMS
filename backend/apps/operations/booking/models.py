@@ -498,3 +498,73 @@ class Guest(TimeStampedModel):
             f"{self.last_name}"
         )
 
+
+class Reservation(TimeStampedModel):
+    """
+    Central booking transaction.
+    """
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        CONFIRMED = "confirmed", "Confirmed"
+        CHECKED_IN = "checked_in", "Checked In"
+        CHECKED_OUT = "checked_out", "Checked Out"
+        CANCELLED = "cancelled", "Cancelled"
+        NO_SHOW = "no_show", "No Show"
+
+    class BookingSource(models.TextChoices):
+        WEBSITE = "website", "Website"
+        WALK_IN = "walk_in", "Walk In"
+        PHONE = "phone", "Phone"
+        OTA = "ota", "OTA"
+        CORPORATE = "corporate", "Corporate"
+        AGENT = "agent", "Travel Agent"
+
+    class CancellationStatus(models.TextChoices):
+        NOT_CANCELLED = "not_cancelled", "Not Cancelled"
+        REQUESTED = "requested", "Requested"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="reservations",)
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="reservations",)
+    guest = models.ForeignKey(Guest, on_delete=models.PROTECT, related_name="reservations",)
+    booking_number = models.CharField(max_length=50, unique=True,)
+    check_in = models.DateField()
+    check_out = models.DateField()
+    adults = models.PositiveIntegerField(default=1,)
+    children = models.PositiveIntegerField(default=0,)
+    booking_source = models.CharField(max_length=30,choices=BookingSource.choices, default=BookingSource.WEBSITE,)
+    status = models.CharField( max_length=30, choices=Status.choices, default=Status.PENDING,)
+    cancellation_status = models.CharField(max_length=30,choices=CancellationStatus.choices, default=CancellationStatus.NOT_CANCELLED,)
+    cancellation_reason = models.TextField(blank=True,)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2,default=0,)
+    tax_amount = models.DecimalField(max_digits=12,decimal_places=2, default=0,)
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,)
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,)
+    pricing_snapshot = models.JSONField( default=dict, blank=True,help_text="Frozen price details at booking time",)
+    payment_summary = models.JSONField(default=dict,blank=True,)
+    booking_metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["-created_at",]
+
+        indexes = [
+            models.Index(
+                fields=["property", "check_in",],
+                name="idx_reserv_prop_checkin",
+            ),
+            models.Index(
+                fields=["guest",],
+                name="idx_reserv_guest",
+            ),
+            models.Index(
+                fields=["status",],
+                name="idx_reserv_status",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.booking_number} - "
+            f"{self.guest}"
+        )
