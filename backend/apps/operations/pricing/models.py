@@ -268,3 +268,70 @@ class PriceCalendar(TimeStampedModel):
             f"{self.date} "
             f"{self.final_price}"
         )
+
+
+class DerivedRate(TimeStampedModel):
+    """
+    Defines inherited pricing relationships.
+
+    Example:
+    OTA rate = Base Rate + 20%
+    Member rate = Base Rate - 15%
+    """
+    class AdjustmentType(models.TextChoices):
+        PERCENTAGE = "percentage", "Percentage"
+        FIXED = "fixed", "Fixed Amount"
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="derived_rates",)
+    parent_rate_plan = models.ForeignKey(RatePlan, on_delete=models.CASCADE, related_name="derived_rates",)
+    name = models.CharField(max_length=200,)
+    slug = models.SlugField(max_length=200,)
+    description = models.TextField(blank=True,)
+    adjustment_type = models.CharField(max_length=30, choices=AdjustmentType.choices, default=AdjustmentType.PERCENTAGE,)
+    adjustment_value = models.DecimalField(max_digits=8, decimal_places=2, help_text="Positive = markup, Negative = discount",)
+    channel = models.CharField(max_length=50, blank=True, help_text="Example: OTA, Direct, Mobile",)
+    customer_segment = models.CharField(max_length=100, blank=True, help_text="Example: Corporate, Member",)
+    priority = models.PositiveIntegerField(default=100,)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE,)
+    conditions = models.JSONField(default=dict, blank=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["priority", "name",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["property", "slug",],
+                name="uq_derived_rate_prop_slug",
+            ),
+            models.UniqueConstraint(
+                fields=["parent_rate_plan", "name",],
+                name="uq_derived_rate_plan_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["property", "status",],
+                name="idx_derived_rate_prop_status",
+            ),
+            models.Index(
+                fields=["parent_rate_plan",],
+                name="idx_derived_rate_parent_plan",
+            ),
+            models.Index(
+                fields=["channel",],
+                name="idx_derived_rate_channel",
+            ),
+        ]
+
+
+    def __str__(self):
+        return (
+            f"{self.parent_rate_plan.name} "
+            f"→ {self.name}"
+        )

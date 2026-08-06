@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import RatePlan, RateRule,Season, PriceCalendar
+from .models import RatePlan, RateRule,Season, PriceCalendar, DerivedRate
 
 @admin.register(RatePlan)
 class RatePlanAdmin(admin.ModelAdmin):
@@ -132,5 +132,45 @@ class PriceCalendarAdmin(admin.ModelAdmin):
 
     ordering = (
         "date",
+
+    )
+
+
+@admin.register(DerivedRate)
+class DerivedRateAdmin(admin.ModelAdmin):
+
+    list_display = (
+
+        "name",
+        "parent_rate_plan",
+        "adjustment_type",
+        "adjustment_value",
+        "channel",
+        "status",
+
+    )
+
+
+    list_filter = (
+
+        "status",
+        "adjustment_type",
+        "channel",
+
+    )
+
+
+    search_fields = (
+
+        "name",
+        "parent_rate_plan__name",
+
+    )
+
+
+    ordering = (
+
+        "priority",
+        "name",
 
     )
