@@ -140,3 +140,68 @@ class RateRule(TimeStampedModel):
 
     def __str__(self):
         return f"{self.rate_plan.name} - {self.name}"
+
+
+class Season(TimeStampedModel):
+    """
+    Defines reusable seasonal periods used by pricing engine.
+    Does not store prices.
+    """
+    class SeasonType(models.TextChoices):
+
+        PEAK = "peak", "Peak Season"
+        OFF = "off", "Off Season"
+        HOLIDAY = "holiday", "Holiday Season"
+        FESTIVE = "festive", "Festive Season"
+        MONSOON = "monsoon", "Monsoon Season"
+        WEEKEND = "weekend", "Weekend Season"
+        CUSTOM = "custom", "Custom Season"
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="seasons",)
+    name = models.CharField(max_length=200,)
+    slug = models.SlugField(max_length=200,)
+    description = models.TextField(blank=True,)
+    season_type = models.CharField(max_length=30, choices=SeasonType.choices, default=SeasonType.CUSTOM,)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    priority = models.PositiveIntegerField(default=100, help_text="Lower value has higher priority.",)
+    color_code = models.CharField(max_length=20, blank=True, help_text="UI calendar color reference.",)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE,)
+    recurring = models.BooleanField(default=False, help_text="Repeat every year.",)
+    applicable_months = models.JSONField(default=list, blank=True,)
+    conditions = models.JSONField(default=dict, blank=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["priority","start_date",]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["property", "slug",],
+                name="uq_season_property_slug",
+            ),
+            models.UniqueConstraint(
+                fields=["property","name",],
+                name="uq_season_property_name",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["property","status",],
+                name="idx_season_property_status",
+            ),
+            models.Index(
+                fields=["property", "start_date", "end_date",],
+                name="idx_season_date_range",
+            ),
+            models.Index(
+                fields=["season_type",],
+                name="idx_season_type",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.property.name} - {self.name}"
