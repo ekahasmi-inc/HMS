@@ -678,3 +678,67 @@ class ReservationGuest(TimeStampedModel):
             guest_name = self.guest.email or f"Guest #{self.guest.pk}"
 
         return f"{self.reservation.booking_number} - {guest_name}"
+
+
+class ReservationPayment(TimeStampedModel):
+    """
+    Financial transactions linked with a reservation.
+    """
+    class PaymentType(models.TextChoices):
+        PAYMENT = "payment", "Payment"
+        REFUND = "refund", "Refund"
+        ADJUSTMENT = "adjustment", "Adjustment"
+
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Cash"
+        CARD = "card", "Card"
+        UPI = "upi", "UPI"
+        BANK_TRANSFER = "bank_transfer", "Bank Transfer"
+        ONLINE = "online", "Online Gateway"
+        OTHER = "other", "Other"
+
+    class PaymentStatus(models.TextChoices):
+        INITIATED = "initiated", "Initiated"
+        PENDING = "pending", "Pending"
+        SUCCESS = "success", "Success"
+        FAILED = "failed", "Failed"
+        REFUNDED = "refunded", "Refunded"
+        CANCELLED = "cancelled", "Cancelled"
+
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name="payments",)
+    payment_type = models.CharField(max_length=20, choices=PaymentType.choices, default=PaymentType.PAYMENT,)
+    payment_method = models.CharField(max_length=30, choices=PaymentMethod.choices, default=PaymentMethod.ONLINE,)
+    status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING,)
+    amount = models.DecimalField(max_digits=12, decimal_places=2,)
+    currency = models.CharField(max_length=10, default="INR",)
+    gateway_name = models.CharField(max_length=100, blank=True,)
+    gateway_transaction_id = models.CharField(max_length=200, blank=True,)
+    gateway_order_id = models.CharField(max_length=200, blank=True,)
+    paid_at = models.DateTimeField( null=True, blank=True,)
+    failure_reason = models.TextField(blank=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["-created_at",]
+
+        indexes = [
+            models.Index(
+                fields=["reservation", "status",],
+                name="idx_res_payment_status",
+            ),
+            models.Index(
+                fields=["gateway_transaction_id",],
+                name="idx_payment_gateway_txn",
+            ),
+            models.Index(
+                fields=["payment_method",],
+                name="idx_payment_method",
+            ),
+
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.reservation.booking_number} "
+            f"- {self.amount} {self.currency}"
+        )

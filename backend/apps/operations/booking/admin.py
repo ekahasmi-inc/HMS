@@ -10,7 +10,8 @@ from .models import (
     Guest,
     Reservation,
     ReservationRoom,
-    ReservationGuest
+    ReservationGuest,
+    ReservationPayment,
 )
 
 @admin.register(Property)
@@ -395,4 +396,43 @@ class ReservationGuestAdmin(admin.ModelAdmin):
         "reservation",
         "reservation_room",
         "guest",
+    )
+
+
+@admin.register(ReservationPayment)
+class ReservationPaymentAdmin(admin.ModelAdmin):
+
+    list_display = (
+
+        "reservation",
+        "payment_type",
+        "payment_method",
+        "amount",
+        "status",
+        "created_at",
+
+    )
+
+
+    list_filter = (
+
+        "payment_type",
+        "payment_method",
+        "status",
+
+    )
+
+
+    search_fields = (
+
+        "reservation__booking_number",
+        "gateway_transaction_id",
+        "gateway_order_id",
+
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+
     )
