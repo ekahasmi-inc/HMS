@@ -568,3 +568,57 @@ class Reservation(TimeStampedModel):
             f"{self.booking_number} - "
             f"{self.guest}"
         )
+
+
+class ReservationRoom(TimeStampedModel):
+    """
+    Room-level reservation details.
+    Connects Reservation with Room inventory.
+    """
+    class Status(models.TextChoices):
+        RESERVED = "reserved", "Reserved"
+        ASSIGNED = "assigned", "Assigned"
+        CHECKED_IN = "checked_in", "Checked In"
+        CHECKED_OUT = "checked_out", "Checked Out"
+        CANCELLED = "cancelled", "Cancelled"
+
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name="rooms",)
+    room_type = models.ForeignKey(RoomType, on_delete=models.PROTECT, related_name="reservation_rooms",)
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name="reservation_rooms", help_text="Actual assigned physical room",)
+    rate_plan = models.ForeignKey("pricing.RatePlan", on_delete=models.PROTECT, related_name="reservation_rooms",)
+    rooms_count = models.PositiveIntegerField(default=1,)
+    adults = models.PositiveIntegerField(default=1,)
+    children = models.PositiveIntegerField(default=0,)
+    check_in = models.DateField()
+    check_out = models.DateField()
+    nightly_price_snapshot = models.JSONField(default=dict, blank=True, help_text="Frozen nightly pricing",)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0,)
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,)
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,)
+    final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,)
+    status = models.CharField( max_length=30, choices=Status.choices, default=Status.RESERVED,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["created_at",]
+
+        indexes = [
+            models.Index(
+                fields=["reservation",],
+                name="idx_reserv_room_reservation",
+            ),
+            models.Index(
+                fields=["room", "check_in","check_out",],
+                name="idx_reserv_room_dates",
+            ),
+            models.Index(
+                fields=["room_type",],
+                name="idx_reserv_room_type",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.reservation.booking_number} - "
+            f"{self.room_type.name}"
+        )

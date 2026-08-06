@@ -9,6 +9,7 @@ from .models import (
     Room,
     Guest,
     Reservation,
+    ReservationRoom,
 )
 
 @admin.register(Property)
@@ -326,5 +327,37 @@ class ReservationAdmin(admin.ModelAdmin):
     ordering = (
 
         "-created_at",
+
+    )
+
+
+@admin.register(ReservationRoom)
+class ReservationRoomAdmin(admin.ModelAdmin):
+
+    list_display = (
+
+        "reservation",
+        "room_type",
+        "room",
+        "rate_plan",
+        "status",
+        "final_amount",
+
+    )
+
+
+    list_filter = (
+
+        "status",
+        "room_type",
+
+    )
+
+
+    search_fields = (
+
+        "reservation__booking_number",
+        "room__room_number",
+        "room_type__name",
 
     )
