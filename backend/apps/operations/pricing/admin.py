@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import RatePlan, RateRule,Season
+from .models import RatePlan, RateRule,Season, PriceCalendar
 
 @admin.register(RatePlan)
 class RatePlanAdmin(admin.ModelAdmin):
@@ -93,4 +93,44 @@ class SeasonAdmin(admin.ModelAdmin):
     ordering = (
         "priority",
         "start_date",
+    )
+
+
+@admin.register(PriceCalendar)
+class PriceCalendarAdmin(admin.ModelAdmin):
+
+    list_display = (
+
+        "date",
+        "property",
+        "room_type",
+        "rate_plan",
+        "final_price",
+        "channel",
+        "status",
+
+    )
+
+
+    list_filter = (
+
+        "property",
+        "channel",
+        "status",
+        "date",
+
+    )
+
+
+    search_fields = (
+
+        "room_type__name",
+        "rate_plan__name",
+
+    )
+
+
+    ordering = (
+        "date",
+
     )
