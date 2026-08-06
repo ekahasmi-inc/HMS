@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import RatePlan
+from .models import RatePlan, RateRule
 
 
 @admin.register(RatePlan)
@@ -31,5 +31,34 @@ class RatePlanAdmin(admin.ModelAdmin):
 
     ordering = (
         "property",
+        "name",
+    )
+
+
+@admin.register(RateRule)
+class RateRuleAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "rate_plan",
+        "rule_type",
+        "adjustment_value",
+        "priority",
+        "status",
+    )
+
+    list_filter = (
+        "rule_type",
+        "status",
+    )
+
+    search_fields = (
+        "name",
+        "rate_plan__name",
+        "property__name",
+    )
+
+    ordering = (
+        "priority",
         "name",
     )
