@@ -1,7 +1,11 @@
 from django.db import models
 from django.conf import settings
 from apps.platform.common.models import TimeStampedModel
-from apps.operations.booking.models import Room
+from apps.operations.booking.models import (
+    Property,
+    Room,
+    RoomType,
+)
 
 class InventoryCalendar(TimeStampedModel):
     """
@@ -167,3 +171,58 @@ class InventoryAdjustment(TimeStampedModel):
             f"{self.adjustment_type} | "
             f"{self.created_at:%Y-%m-%d %H:%M}"
         )
+
+
+
+class AvailabilityRule(TimeStampedModel):
+    """
+    Reusable availability policy.
+    """
+    class RuleType(models.TextChoices):
+        PROPERTY = "property", "Property"
+        ROOM_TYPE = "room_type", "Room Type"
+        ROOM = "room", "Room"
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="availability_rules",)
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, null=True, blank=True,)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True, related_name="availability_rules",)
+    name = models.CharField(max_length=200,)
+    rule_type = models.CharField(max_length=20, choices=RuleType.choices, default=RuleType.PROPERTY,)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE,)
+    start_date = models.DateField(null=True, blank=True,)
+    end_date = models.DateField(null=True, blank=True,)
+    minimum_stay = models.PositiveSmallIntegerField(default=1,)
+    maximum_stay = models.PositiveSmallIntegerField(default=30,)
+    booking_window_min_days = models.PositiveIntegerField(default=0,)
+    booking_window_max_days = models.PositiveIntegerField(default=365,)
+    closed_to_arrival = models.BooleanField(default=False,)
+    closed_to_departure = models.BooleanField(default=False,)
+    allowed_weekdays = models.JSONField(default=list, blank=True, help_text="Example: ['mon','tue','wed']",)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["property", "name",]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["property", "name",],
+                name="uq_avail_rule_property_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["property", "status",],
+                name="idx_avail_prop_status",
+            ),
+            models.Index(
+                fields=["rule_type",],
+                name="idx_avail_rule_type",
+            ),
+        ]
+
+    def __str__(self):
+        return self.name

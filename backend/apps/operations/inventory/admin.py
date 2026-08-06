@@ -3,6 +3,7 @@ from .models import (
     InventoryCalendar,
     InventoryBlock,
     InventoryAdjustment,
+    AvailabilityRule
 )
 
 @admin.register(InventoryCalendar)
@@ -90,4 +91,31 @@ class InventoryAdjustmentAdmin(admin.ModelAdmin):
 
     ordering = (
         "-created_at",
+    )
+
+@admin.register(AvailabilityRule)
+class AvailabilityRuleAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "property",
+        "rule_type",
+        "minimum_stay",
+        "maximum_stay",
+        "status",
+    )
+
+    list_filter = (
+        "rule_type",
+        "status",
+    )
+
+    search_fields = (
+        "name",
+        "property__name",
+    )
+
+    ordering = (
+        "property",
+        "name",
     )
