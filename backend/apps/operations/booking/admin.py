@@ -7,6 +7,7 @@ from .models import (
     RoomType,
     RoomAmenity,
     Room,
+    Guest,
 )
 
 @admin.register(Property)
@@ -252,3 +253,35 @@ class RoomAdmin(admin.ModelAdmin):
     prepopulated_fields = {
         "slug": ("room_number",)
     }
+
+
+@admin.register(Guest)
+class GuestAdmin(admin.ModelAdmin):
+
+    list_display = (
+
+        "first_name",
+        "last_name",
+        "phone",
+        "email",
+        "status",
+
+    )
+
+
+    list_filter = (
+
+        "status",
+        "country",
+
+    )
+
+
+    search_fields = (
+
+        "first_name",
+        "last_name",
+        "phone",
+        "email",
+
+    )

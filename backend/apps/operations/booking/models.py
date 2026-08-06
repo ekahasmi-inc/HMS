@@ -442,3 +442,59 @@ class Room(TimeStampedModel):
 
     def __str__(self):
         return f"{self.property.name} - {self.room_number}"
+
+
+
+class Guest(TimeStampedModel):
+    """
+    Customer staying at property.
+    Independent from authentication users.
+    """
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        BLOCKED = "blocked", "Blocked"
+
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="guests",)
+    first_name = models.CharField(max_length=100,)
+    last_name = models.CharField(max_length=100, blank=True,)
+    email = models.EmailField(blank=True,)
+    phone = models.CharField(max_length=30, blank=True,)
+    alternate_phone = models.CharField(max_length=30, blank=True,)
+    date_of_birth = models.DateField(null=True, blank=True,)
+    nationality = models.CharField(max_length=100, blank=True,)
+    address = models.TextField(blank=True,)
+    city = models.CharField(max_length=100, blank=True,)
+    state = models.CharField(max_length=100, blank=True,)
+    country = models.CharField(max_length=100, default="India",)
+    id_type = models.CharField(max_length=50, blank=True,)
+    id_number = models.CharField(max_length=100, blank=True,)
+    preferences = models.JSONField(default=dict, blank=True, help_text="Guest preferences and history",)
+    metadata = models.JSONField(default=dict, blank=True,)
+    status = models.CharField( max_length=20, choices=Status.choices, default=Status.ACTIVE,)
+
+    class Meta:
+        ordering = ["first_name", "last_name",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "email",],
+                name="uq_guest_tenant_email",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["tenant", "phone",],
+                name="idx_guest_tenant_phone",
+            ),
+            models.Index(
+                fields=["tenant", "email",],
+                name="idx_guest_tenant_email",
+            ),
+        ]
+        
+    def __str__(self):
+        return (
+            f"{self.first_name} "
+            f"{self.last_name}"
+        )
+
