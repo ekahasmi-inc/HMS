@@ -493,10 +493,7 @@ class Guest(TimeStampedModel):
         ]
         
     def __str__(self):
-        return (
-            f"{self.first_name} "
-            f"{self.last_name}"
-        )
+        return f"{self.first_name} {self.last_name}".strip()
 
 
 class Reservation(TimeStampedModel):
@@ -622,3 +619,62 @@ class ReservationRoom(TimeStampedModel):
             f"{self.reservation.booking_number} - "
             f"{self.room_type.name}"
         )
+
+
+
+class ReservationGuest(TimeStampedModel):
+    """
+    Individual guest attached to a reservation.
+    """
+    class GuestRole(models.TextChoices):
+        PRIMARY = "primary", "Primary Guest"
+        ADULT = "adult", "Adult"
+        CHILD = "child", "Child"
+        INFANT = "infant", "Infant"
+
+    class IdentityStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        VERIFIED = "verified", "Verified"
+        REJECTED = "rejected", "Rejected"
+
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name="reservation_guests",)
+    reservation_room = models.ForeignKey(ReservationRoom, on_delete=models.CASCADE, related_name="guests", null=True, blank=True, help_text="Assigned room within reservation.",)
+    guest = models.ForeignKey( Guest, on_delete=models.PROTECT, related_name="reservation_history",)
+    role = models.CharField(max_length=20, choices=GuestRole.choices, default=GuestRole.ADULT,)
+    is_primary = models.BooleanField(default=False,)
+    identity_status = models.CharField(max_length=20, choices=IdentityStatus.choices, default=IdentityStatus.PENDING,)
+    check_in_completed = models.BooleanField(default=False,)
+    special_requests = models.TextField(blank=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+    
+    class Meta:
+        ordering = ["reservation", "-is_primary", "role", "guest",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["reservation", "guest",],
+                name="uq_reservation_guest",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["reservation", "role",],
+                name="idx_res_guest_role",
+            ),
+            models.Index(
+                fields=["reservation_room",],
+                name="idx_res_guest_room",
+            ),
+            models.Index(
+                fields=["guest",],
+                name="idx_res_guest_guest",
+            ),
+        ]
+
+    def __str__(self):
+        guest_name = (f"{self.guest.first_name or ''} {self.guest.last_name or ''}").strip()
+
+        if not guest_name:
+            guest_name = self.guest.email or f"Guest #{self.guest.pk}"
+
+        return f"{self.reservation.booking_number} - {guest_name}"

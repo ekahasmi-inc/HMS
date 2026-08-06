@@ -10,6 +10,7 @@ from .models import (
     Guest,
     Reservation,
     ReservationRoom,
+    ReservationGuest
 )
 
 @admin.register(Property)
@@ -360,4 +361,38 @@ class ReservationRoomAdmin(admin.ModelAdmin):
         "room__room_number",
         "room_type__name",
 
+    )
+
+
+
+@admin.register(ReservationGuest)
+class ReservationGuestAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "reservation",
+        "guest",
+        "role",
+        "reservation_room",
+        "identity_status",
+        "check_in_completed",
+    )
+
+    list_filter = (
+        "role",
+        "identity_status",
+        "check_in_completed",
+    )
+
+    search_fields = (
+        "reservation__booking_number",
+        "guest__first_name",
+        "guest__last_name",
+        "guest__email",
+        "guest__phone_number",
+    )
+
+    autocomplete_fields = (
+        "reservation",
+        "reservation_room",
+        "guest",
     )
