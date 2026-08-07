@@ -9,7 +9,8 @@ from .models import (
     CleaningChecklist,
     CleaningChecklistItem,
     Inspection,
-    InspectionItem
+    InspectionItem,
+    LostAndFound,
 )
 
 
@@ -271,13 +272,6 @@ class InspectionAdmin(admin.ModelAdmin):
         "updated_at",
     )
 
-
-
-from .models import (
-    InspectionItem,
-)
-
-
 @admin.register(InspectionItem)
 class InspectionItemAdmin(admin.ModelAdmin):
 
@@ -308,6 +302,37 @@ class InspectionItemAdmin(admin.ModelAdmin):
     ordering = (
         "inspection",
         "sequence",
+    )
+
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+@admin.register(LostAndFound)
+class LostAndFoundAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "item_name",
+        "property",
+        "room",
+        "category",
+        "status",
+        "found_at",
+    )
+
+
+    list_filter = (
+        "category",
+        "status",
+    )
+
+
+    search_fields = (
+        "item_name",
+        "description",
+        "location_found",
     )
 
 

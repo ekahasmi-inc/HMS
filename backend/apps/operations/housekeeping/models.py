@@ -1,10 +1,12 @@
 from django.db import models
 from django.conf import settings
-from apps.operations.booking.models import Property, Room
+from apps.operations.booking.models import Property, Room,Reservation,Guest
 from apps.platform.common.models import TimeStampedModel
 from datetime import timedelta
 from django.utils import timezone
 
+def default_retention_date():
+    return (timezone.now() + timedelta(days=90)).date()
 
 class HousekeepingTask(TimeStampedModel):
     """
@@ -1232,4 +1234,113 @@ class InspectionItem(TimeStampedModel):
         return (
             f"{self.inspection.room.room_number} - "
             f"{self.title}"
+        )
+
+
+class LostAndFound(TimeStampedModel):
+    """
+    Guest belongings discovered during operations.
+    """
+
+    class ItemCategory(models.TextChoices):
+
+        ELECTRONICS = "electronics", "Electronics"
+        CLOTHING = "clothing", "Clothing"
+        JEWELLERY = "jewellery", "Jewellery"
+        DOCUMENT = "document", "Document"
+        CASH = "cash", "Cash"
+        BAG = "bag", "Bag"
+        TOILETRY = "toiletry", "Toiletry"
+        MEDICINE = "medicine", "Medicine"
+        OTHER = "other", "Other"
+
+
+    class Status(models.TextChoices):
+
+        FOUND = "found", "Found"
+        STORED = "stored", "Stored"
+        GUEST_CONTACTED = "guest_contacted", "Guest Contacted"
+        CLAIMED = "claimed", "Claimed"
+        RETURNED = "returned", "Returned"
+        DONATED = "donated", "Donated"
+        DISPOSED = "disposed", "Disposed"
+
+
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name="lost_and_found_items",
+    )
+
+
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="lost_and_found_items",
+    )
+
+
+    reservation = models.ForeignKey(
+        Reservation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="lost_and_found_items",
+    )
+
+
+    found_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="items_found",
+    )
+
+
+    claimed_by = models.ForeignKey(
+        Guest,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="claimed_items",
+    )
+
+
+    category = models.CharField(max_length=30, choices=ItemCategory.choices, default=ItemCategory.OTHER,)
+    item_name = models.CharField(max_length=200,)
+    description = models.TextField(blank=True, )
+    location_found = models.CharField(max_length=200,)
+    storage_location = models.CharField(max_length=200, blank=True,)
+    status = models.CharField(max_length=30, choices=Status.choices, default=Status.FOUND,)
+    found_at = models.DateTimeField(default=timezone.now,)
+    retention_until = models.DateField(default=default_retention_date,)
+    returned_at = models.DateTimeField(null=True, blank=True,)
+    media_reference = models.ForeignKey("assets.MediaReference", on_delete=models.SET_NULL, null=True, blank=True, related_name="lost_found_items",)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["-found_at",]
+
+        indexes = [
+            models.Index(
+                fields=["property", "status",],
+                name="idx_lost_found_property_status",
+            ),
+            models.Index(
+                fields=["room", "status",],
+                name="idx_lost_found_room_status",
+            ),
+            models.Index(
+                fields=[ "found_at",],
+                name="idx_lost_found_date",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.item_name} "
+            f"({self.property.name})"
         )
