@@ -12,6 +12,7 @@ from .models import (
     ReservationRoom,
     ReservationGuest,
     ReservationPayment,
+    ReservationStatusHistory,
 )
 
 @admin.register(Property)
@@ -435,4 +436,35 @@ class ReservationPaymentAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
 
+    )
+
+
+@admin.register(ReservationStatusHistory)
+class ReservationStatusHistoryAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "reservation",
+        "previous_status",
+        "new_status",
+        "change_source",
+        "changed_by",
+        "created_at",
+    )
+
+
+    list_filter = (
+        "new_status",
+        "change_source",
+    )
+
+
+    search_fields = (
+        "reservation__booking_number",
+        "reason",
+    )
+
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
     )

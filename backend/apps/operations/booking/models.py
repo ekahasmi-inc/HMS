@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from apps.platform.common.models import TimeStampedModel
 from apps.platform.tenants.models import Tenant
 from apps.platform.common.models import BaseModel
@@ -734,11 +735,54 @@ class ReservationPayment(TimeStampedModel):
                 fields=["payment_method",],
                 name="idx_payment_method",
             ),
-
         ]
 
     def __str__(self):
         return (
             f"{self.reservation.booking_number} "
             f"- {self.amount} {self.currency}"
+        )
+
+
+class ReservationStatusHistory(TimeStampedModel):
+    """
+    Immutable history of reservation status changes.
+    """
+    class ChangeSource(models.TextChoices):
+        USER = "user", "User"
+        SYSTEM = "system", "System"
+        OTA = "ota", "OTA"
+        PAYMENT = "payment", "Payment"
+        AUTOMATION = "automation", "Automation"
+
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE,  related_name="status_history",)
+    previous_status = models.CharField(max_length=30, choices=Reservation.Status.choices, blank=True,)
+    new_status = models.CharField(max_length=30, choices=Reservation.Status.choices,)
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="reservation_status_changes",)
+    change_source = models.CharField(max_length=20, choices=ChangeSource.choices, default=ChangeSource.USER,)
+    reason = models.TextField(blank=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["-created_at",]
+
+        indexes = [
+            models.Index(
+                fields=["reservation", "created_at",],
+                name="idx_res_status_date",
+            ),
+            models.Index(
+                fields=["new_status",],
+                name="idx_res_new_status",
+            ),
+            models.Index(
+                fields=["change_source",],
+                name="idx_res_change_source",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.reservation.booking_number} : "
+            f"{self.previous_status} → {self.new_status}"
         )
