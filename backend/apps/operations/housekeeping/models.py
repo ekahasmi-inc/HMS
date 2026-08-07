@@ -322,3 +322,225 @@ class HousekeepingStatusLog(TimeStampedModel):
             f"{self.assignment.task.title}: "
             f"{self.previous_status} → {self.new_status}"
         )
+
+
+
+from decimal import Decimal
+
+
+class MaintenanceRequest(TimeStampedModel):
+    """
+    Maintenance work request for rooms, buildings and property assets.
+    """
+
+    class Category(models.TextChoices):
+        ELECTRICAL = "electrical", "Electrical"
+        PLUMBING = "plumbing", "Plumbing"
+        HVAC = "hvac", "HVAC / Air Conditioning"
+        CIVIL = "civil", "Civil"
+        PAINTING = "painting", "Painting"
+        FURNITURE = "furniture", "Furniture"
+        APPLIANCE = "appliance", "Appliance"
+        IT = "it", "IT / Network"
+        LANDSCAPING = "landscaping", "Landscaping"
+        SAFETY = "safety", "Safety"
+        OTHER = "other", "Other"
+
+
+    class Priority(models.TextChoices):
+        LOW = "low", "Low"
+        NORMAL = "normal", "Normal"
+        HIGH = "high", "High"
+        CRITICAL = "critical", "Critical"
+
+
+    class RequestType(models.TextChoices):
+        PREVENTIVE = "preventive", "Preventive"
+        CORRECTIVE = "corrective", "Corrective"
+        EMERGENCY = "emergency", "Emergency"
+        INSPECTION = "inspection", "Inspection"
+
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        APPROVED = "approved", "Approved"
+        IN_PROGRESS = "in_progress", "In Progress"
+        ON_HOLD = "on_hold", "On Hold"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+
+
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name="maintenance_requests",
+    )
+
+
+    building = models.ForeignKey(
+        "booking.Building",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_requests",
+    )
+
+
+    floor = models.ForeignKey(
+        "booking.Floor",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_requests",
+    )
+
+
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_requests",
+    )
+
+
+    housekeeping_task = models.ForeignKey(
+        HousekeepingTask,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_requests",
+    )
+
+
+    title = models.CharField(
+        max_length=200,
+    )
+
+
+    description = models.TextField(
+        blank=True,
+    )
+
+
+    category = models.CharField(
+        max_length=30,
+        choices=Category.choices,
+    )
+
+
+    request_type = models.CharField(
+        max_length=30,
+        choices=RequestType.choices,
+        default=RequestType.CORRECTIVE,
+    )
+
+
+    priority = models.CharField(
+        max_length=20,
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+    )
+
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.OPEN,
+    )
+
+
+    reported_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_requests_reported",
+    )
+
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_requests_approved",
+    )
+
+
+    scheduled_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+
+    estimated_duration_minutes = models.PositiveIntegerField(
+        default=60,
+    )
+
+
+    estimated_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "-priority",
+            "-created_at",
+        ]
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "property",
+                    "title",
+                    "created_at",
+                ],
+                name="uq_maintenance_request_unique",
+            ),
+
+        ]
+
+        indexes = [
+
+            models.Index(
+                fields=[
+                    "property",
+                    "status",
+                ],
+                name="idx_maint_property_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "room",
+                    "status",
+                ],
+                name="idx_maint_room_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "priority",
+                    "status",
+                ],
+                name="idx_maint_priority_status",
+            ),
+
+        ]
+
+
+    def __str__(self):
+
+        return f"{self.property.name} - {self.title}"

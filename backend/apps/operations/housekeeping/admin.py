@@ -1,8 +1,10 @@
 from django.contrib import admin
+
 from .models import (
     HousekeepingTask,
     HousekeepingAssignment,
     HousekeepingStatusLog,
+    MaintenanceRequest,
 )
 
 
@@ -91,6 +93,38 @@ class HousekeepingStatusLogAdmin(admin.ModelAdmin):
     search_fields = (
         "assignment__task__title",
         "remarks",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+
+@admin.register(MaintenanceRequest)
+class MaintenanceRequestAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "title",
+        "property",
+        "room",
+        "category",
+        "priority",
+        "status",
+        "scheduled_date",
+    )
+
+    list_filter = (
+        "category",
+        "priority",
+        "status",
+    )
+
+    search_fields = (
+        "title",
+        "room__room_number",
+        "description",
     )
 
     readonly_fields = (
