@@ -6,6 +6,7 @@ from .models import (
     HousekeepingStatusLog,
     MaintenanceRequest,
     MaintenanceLog,
+    CleaningChecklist,
 )
 
 
@@ -158,6 +159,39 @@ class MaintenanceLogAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "total_cost",
+        "created_at",
+        "updated_at",
+    )
+
+
+
+
+@admin.register(CleaningChecklist)
+class CleaningChecklistAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "property",
+        "checklist_type",
+        "version",
+        "status",
+        "is_default",
+    )
+
+
+    list_filter = (
+        "checklist_type",
+        "status",
+    )
+
+
+    search_fields = (
+        "name",
+        "description",
+    )
+
+
+    readonly_fields = (
         "created_at",
         "updated_at",
     )

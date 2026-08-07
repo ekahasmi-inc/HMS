@@ -707,3 +707,126 @@ class MaintenanceLog(TimeStampedModel):
             f"{self.request.title} - "
             f"{self.work_status}"
         )
+
+
+
+class CleaningChecklist(TimeStampedModel):
+    """
+    Reusable cleaning procedure definition.
+    """
+
+    class ChecklistType(models.TextChoices):
+
+        ROOM_CLEANING = "room_cleaning", "Room Cleaning"
+        CHECKOUT = "checkout", "Checkout Cleaning"
+        DEEP_CLEANING = "deep_cleaning", "Deep Cleaning"
+        PUBLIC_AREA = "public_area", "Public Area"
+        RESTAURANT = "restaurant", "Restaurant"
+        EVENT = "event", "Event Cleanup"
+        OTHER = "other", "Other"
+
+
+    class Status(models.TextChoices):
+
+        DRAFT = "draft", "Draft"
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+
+
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name="cleaning_checklists",
+    )
+
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+
+    slug = models.SlugField(
+        max_length=200,
+    )
+
+
+    checklist_type = models.CharField(
+        max_length=30,
+        choices=ChecklistType.choices,
+        default=ChecklistType.ROOM_CLEANING,
+    )
+
+
+    description = models.TextField(
+        blank=True,
+    )
+
+
+    version = models.PositiveIntegerField(
+        default=1,
+    )
+
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
+
+    is_default = models.BooleanField(
+        default=False,
+    )
+
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "name",
+        ]
+
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "property",
+                    "slug",
+                    "version",
+                ],
+                name="uq_cleaning_checklist_property_version",
+            ),
+
+        ]
+
+
+        indexes = [
+
+            models.Index(
+                fields=[
+                    "property",
+                    "status",
+                ],
+                name="idx_cleaning_checklist_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "property",
+                    "checklist_type",
+                ],
+                name="idx_cleaning_checklist_type",
+            ),
+
+        ]
+
+
+    def __str__(self):
+
+        return f"{self.property.name} - {self.name}"
