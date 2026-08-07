@@ -1,7 +1,9 @@
 from django.db import models
-
+from django.conf import settings
 from apps.operations.booking.models import Property, Room
 from apps.platform.common.models import TimeStampedModel
+from datetime import timedelta
+from django.utils import timezone
 
 
 class HousekeepingTask(TimeStampedModel):
@@ -18,7 +20,6 @@ class HousekeepingTask(TimeStampedModel):
         TURNDOWN = "turndown", "Turndown Service"
         SANITIZATION = "sanitization", "Sanitization"
         EMERGENCY = "emergency", "Emergency Cleaning"
-
 
     class Priority(models.TextChoices):
         LOW = "low", "Low"
@@ -146,3 +147,64 @@ class HousekeepingTask(TimeStampedModel):
     def __str__(self):
 
         return f"{self.room.room_number} - {self.title}"
+
+
+class HousekeepingAssignment(TimeStampedModel):
+    """
+    Assignment of a housekeeping task to a staff member.
+    """
+    class Status(models.TextChoices):
+        ASSIGNED = "assigned", "Assigned"
+        ACCEPTED = "accepted", "Accepted"
+        IN_PROGRESS = "in_progress", "In Progress"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+        REASSIGNED = "reassigned", "Reassigned"
+
+    task = models.ForeignKey(HousekeepingTask, on_delete=models.CASCADE, related_name="assignments",)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="housekeeping_assignments",)
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="housekeeping_assignments_created",)
+    assignment_status = models.CharField(max_length=20, choices=Status.choices, default=Status.ASSIGNED,)
+    planned_start = models.DateTimeField(null=True, blank=True,)
+    planned_end = models.DateTimeField(null=True, blank=True,)
+    actual_start = models.DateTimeField(null=True, blank=True,)
+    actual_end = models.DateTimeField(null=True, blank=True,)
+    completion_percentage = models.PositiveSmallIntegerField(default=0,)
+    notes = models.TextField(blank=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+
+        ordering = [
+            "-created_at",
+        ]
+
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "task",
+                    "assigned_to",
+                ],
+                name="uq_housekeeping_task_assign",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["assigned_to", "assignment_status",],
+                name="idx_hk_assign_user_status",
+            ),
+            models.Index(
+                fields=["task", "assignment_status",],
+                name="idx_hk_assign_task_status",
+            ),
+        ]
+
+    def __str__(self):
+
+        return (
+            f"{self.task.title} → "
+            f"{self.assigned_to or 'Unassigned'}"
+        )
