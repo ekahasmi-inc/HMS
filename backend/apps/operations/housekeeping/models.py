@@ -544,3 +544,166 @@ class MaintenanceRequest(TimeStampedModel):
     def __str__(self):
 
         return f"{self.property.name} - {self.title}"
+
+
+
+from decimal import Decimal
+from django.conf import settings
+
+
+class MaintenanceLog(TimeStampedModel):
+    """
+    Execution log for maintenance work.
+    """
+
+    class WorkStatus(models.TextChoices):
+        STARTED = "started", "Started"
+        IN_PROGRESS = "in_progress", "In Progress"
+        PAUSED = "paused", "Paused"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+        CANCELLED = "cancelled", "Cancelled"
+
+
+    request = models.ForeignKey(
+        MaintenanceRequest,
+        on_delete=models.CASCADE,
+        related_name="logs",
+    )
+
+
+    technician = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="maintenance_logs",
+    )
+
+
+    work_status = models.CharField(
+        max_length=20,
+        choices=WorkStatus.choices,
+        default=WorkStatus.STARTED,
+    )
+
+
+    work_started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+
+    work_completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+
+    labor_hours = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
+
+    materials_used = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of parts/materials used.",
+    )
+
+
+    labor_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
+
+    material_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
+
+    total_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
+
+    before_notes = models.TextField(
+        blank=True,
+    )
+
+
+    work_performed = models.TextField(
+        blank=True,
+    )
+
+
+    after_notes = models.TextField(
+        blank=True,
+    )
+
+
+    completion_evidence = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="References to photos, videos, documents, invoices, etc.",
+    )
+
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "-created_at",
+        ]
+
+
+        indexes = [
+
+            models.Index(
+                fields=[
+                    "request",
+                    "created_at",
+                ],
+                name="idx_maint_log_request_date",
+            ),
+
+            models.Index(
+                fields=[
+                    "technician",
+                    "work_status",
+                ],
+                name="idx_maint_log_tech_status",
+            ),
+
+        ]
+
+
+    def save(self, *args, **kwargs):
+
+        self.total_cost = (
+            self.labor_cost +
+            self.material_cost
+        )
+
+        super().save(*args, **kwargs)
+
+
+    def __str__(self):
+
+        return (
+            f"{self.request.title} - "
+            f"{self.work_status}"
+        )

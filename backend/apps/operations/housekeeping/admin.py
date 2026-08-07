@@ -5,6 +5,7 @@ from .models import (
     HousekeepingAssignment,
     HousekeepingStatusLog,
     MaintenanceRequest,
+    MaintenanceLog,
 )
 
 
@@ -128,6 +129,35 @@ class MaintenanceRequestAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(MaintenanceLog)
+class MaintenanceLogAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "request",
+        "technician",
+        "work_status",
+        "labor_hours",
+        "total_cost",
+        "created_at",
+    )
+
+    list_filter = (
+        "work_status",
+    )
+
+    search_fields = (
+        "request__title",
+        "technician__username",
+        "work_performed",
+    )
+
+    readonly_fields = (
+        "total_cost",
         "created_at",
         "updated_at",
     )
