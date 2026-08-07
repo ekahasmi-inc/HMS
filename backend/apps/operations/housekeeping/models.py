@@ -208,3 +208,117 @@ class HousekeepingAssignment(TimeStampedModel):
             f"{self.task.title} → "
             f"{self.assigned_to or 'Unassigned'}"
         )
+
+
+
+from django.conf import settings
+
+
+class HousekeepingStatusLog(TimeStampedModel):
+    """
+    Immutable audit log for housekeeping assignment status changes.
+    """
+
+    class Status(models.TextChoices):
+        ASSIGNED = "assigned", "Assigned"
+        ACCEPTED = "accepted", "Accepted"
+        STARTED = "started", "Started"
+        PAUSED = "paused", "Paused"
+        RESUMED = "resumed", "Resumed"
+        COMPLETED = "completed", "Completed"
+        FAILED_INSPECTION = "failed_inspection", "Failed Inspection"
+        REOPENED = "reopened", "Reopened"
+        CANCELLED = "cancelled", "Cancelled"
+
+
+    class ChangeSource(models.TextChoices):
+        USER = "user", "User"
+        SYSTEM = "system", "System"
+        AUTOMATION = "automation", "Automation"
+        INSPECTION = "inspection", "Inspection"
+
+
+    assignment = models.ForeignKey(
+        HousekeepingAssignment,
+        on_delete=models.CASCADE,
+        related_name="status_logs",
+    )
+
+
+    previous_status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+        blank=True,
+    )
+
+
+    new_status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+    )
+
+
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="housekeeping_status_changes",
+    )
+
+
+    change_source = models.CharField(
+        max_length=20,
+        choices=ChangeSource.choices,
+        default=ChangeSource.USER,
+    )
+
+
+    remarks = models.TextField(
+        blank=True,
+    )
+
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "-created_at",
+        ]
+
+        indexes = [
+
+            models.Index(
+                fields=[
+                    "assignment",
+                    "created_at",
+                ],
+                name="idx_hk_status_assignment_date",
+            ),
+
+            models.Index(
+                fields=[
+                    "new_status",
+                ],
+                name="idx_hk_status_new",
+            ),
+
+            models.Index(
+                fields=[
+                    "change_source",
+                ],
+                name="idx_hk_status_source",
+            ),
+
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.assignment.task.title}: "
+            f"{self.previous_status} → {self.new_status}"
+        )

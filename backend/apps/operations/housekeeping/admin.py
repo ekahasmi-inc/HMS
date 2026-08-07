@@ -1,6 +1,9 @@
 from django.contrib import admin
-
-from .models import HousekeepingTask,HousekeepingAssignment
+from .models import (
+    HousekeepingTask,
+    HousekeepingAssignment,
+    HousekeepingStatusLog,
+)
 
 
 @admin.register(HousekeepingTask)
@@ -60,6 +63,34 @@ class HousekeepingAssignmentAdmin(admin.ModelAdmin):
         "assigned_to__username",
         "assigned_to__first_name",
         "assigned_to__last_name",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(HousekeepingStatusLog)
+class HousekeepingStatusLogAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "assignment",
+        "previous_status",
+        "new_status",
+        "change_source",
+        "changed_by",
+        "created_at",
+    )
+
+    list_filter = (
+        "new_status",
+        "change_source",
+    )
+
+    search_fields = (
+        "assignment__task__title",
+        "remarks",
     )
 
     readonly_fields = (
