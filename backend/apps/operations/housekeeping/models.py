@@ -955,3 +955,281 @@ class CleaningChecklistItem(TimeStampedModel):
             f"{self.checklist.name} - "
             f"{self.sequence}. {self.name}"
         )
+
+
+
+class Inspection(TimeStampedModel):
+    """
+    Quality inspection record for housekeeping operations.
+    """
+
+    class Status(models.TextChoices):
+
+        PENDING = "pending", "Pending"
+        IN_PROGRESS = "in_progress", "In Progress"
+        PASSED = "passed", "Passed"
+        FAILED = "failed", "Failed"
+        REINSPECTION_REQUIRED = (
+            "reinspection_required",
+            "Reinspection Required",
+        )
+        CANCELLED = "cancelled", "Cancelled"
+
+
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name="inspections",
+    )
+
+
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.CASCADE,
+        related_name="inspections",
+    )
+
+
+    housekeeping_task = models.ForeignKey(
+        HousekeepingTask,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="inspections",
+    )
+
+
+    checklist = models.ForeignKey(
+        CleaningChecklist,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="inspections",
+    )
+
+
+    inspector = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="room_inspections",
+    )
+
+
+    status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+
+    score = models.PositiveIntegerField(
+        default=0,
+        help_text="Inspection score percentage.",
+    )
+
+
+    is_guest_ready = models.BooleanField(
+        default=False,
+    )
+
+
+    passed = models.BooleanField(
+        default=False,
+    )
+
+
+    remarks = models.TextField(
+        blank=True,
+    )
+
+
+    inspected_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "-created_at",
+        ]
+
+
+        indexes = [
+
+            models.Index(
+                fields=[
+                    "property",
+                    "status",
+                ],
+                name="idx_inspection_property_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "room",
+                    "status",
+                ],
+                name="idx_inspection_room_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "inspector",
+                ],
+                name="idx_inspection_inspector",
+            ),
+
+        ]
+
+    def __str__(self):
+
+        return (
+            f"{self.room} - "
+            f"{self.status}"
+        )
+
+
+class InspectionItem(TimeStampedModel):
+    """
+    Individual checkpoint evaluated during an inspection.
+    """
+
+    class Status(models.TextChoices):
+
+        PENDING = "pending", "Pending"
+        PASSED = "passed", "Passed"
+        FAILED = "failed", "Failed"
+        NOT_APPLICABLE = "not_applicable", "Not Applicable"
+
+
+    inspection = models.ForeignKey(
+        Inspection,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+
+
+    checklist_item = models.ForeignKey(
+        CleaningChecklistItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="inspection_items",
+    )
+
+
+    sequence = models.PositiveIntegerField(
+        default=0,
+    )
+
+
+    title = models.CharField(
+        max_length=200,
+    )
+
+
+    status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+
+    passed = models.BooleanField(
+        default=False,
+    )
+
+
+    is_mandatory = models.BooleanField(
+        default=True,
+    )
+
+
+    score = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Score awarded for this checkpoint.",
+    )
+
+
+    max_score = models.PositiveSmallIntegerField(
+        default=10,
+    )
+
+
+    requires_corrective_action = models.BooleanField(
+        default=False,
+    )
+
+
+    remarks = models.TextField(
+        blank=True,
+    )
+
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "sequence",
+        ]
+
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "inspection",
+                    "sequence",
+                ],
+                name="uq_inspection_item_sequence",
+            ),
+
+            models.UniqueConstraint(
+                fields=[
+                    "inspection",
+                    "checklist_item",
+                ],
+                name="uq_inspection_item_checklist",
+            ),
+
+        ]
+
+
+        indexes = [
+
+            models.Index(
+                fields=[
+                    "inspection",
+                    "status",
+                ],
+                name="idx_inspection_item_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "requires_corrective_action",
+                ],
+                name="idx_inspection_item_corrective",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.inspection.room.room_number} - "
+            f"{self.title}"
+        )

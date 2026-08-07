@@ -8,6 +8,8 @@ from .models import (
     MaintenanceLog,
     CleaningChecklist,
     CleaningChecklistItem,
+    Inspection,
+    InspectionItem
 )
 
 
@@ -226,6 +228,85 @@ class CleaningChecklistItemAdmin(admin.ModelAdmin):
 
     ordering = (
         "checklist",
+        "sequence",
+    )
+
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(Inspection)
+class InspectionAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "room",
+        "property",
+        "inspector",
+        "status",
+        "score",
+        "is_guest_ready",
+        "created_at",
+    )
+
+
+    list_filter = (
+        "status",
+        "is_guest_ready",
+        "passed",
+    )
+
+
+    search_fields = (
+        "room__room_number",
+        "remarks",
+        "inspector__username",
+    )
+
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+
+from .models import (
+    InspectionItem,
+)
+
+
+@admin.register(InspectionItem)
+class InspectionItemAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "inspection",
+        "sequence",
+        "title",
+        "status",
+        "score",
+        "requires_corrective_action",
+    )
+
+
+    list_filter = (
+        "status",
+        "requires_corrective_action",
+        "is_mandatory",
+    )
+
+
+    search_fields = (
+        "title",
+        "remarks",
+        "inspection__room__room_number",
+    )
+
+
+    ordering = (
+        "inspection",
         "sequence",
     )
 
