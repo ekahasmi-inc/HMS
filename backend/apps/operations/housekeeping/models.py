@@ -830,3 +830,128 @@ class CleaningChecklist(TimeStampedModel):
     def __str__(self):
 
         return f"{self.property.name} - {self.name}"
+
+
+
+class CleaningChecklistItem(TimeStampedModel):
+    """
+    Individual steps inside a cleaning checklist.
+    """
+
+    class Department(models.TextChoices):
+
+        HOUSEKEEPING = "housekeeping", "Housekeeping"
+        LAUNDRY = "laundry", "Laundry"
+        MAINTENANCE = "maintenance", "Maintenance"
+        FRONT_OFFICE = "front_office", "Front Office"
+        SECURITY = "security", "Security"
+        OTHER = "other", "Other"
+
+
+    checklist = models.ForeignKey(
+        CleaningChecklist,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+
+    description = models.TextField(
+        blank=True,
+    )
+
+
+    instructions = models.TextField(
+        blank=True,
+        help_text="Detailed instructions for housekeeping staff.",
+    )
+
+
+    sequence = models.PositiveIntegerField(
+        default=0,
+    )
+
+
+    is_mandatory = models.BooleanField(
+        default=True,
+    )
+
+
+    department = models.CharField(
+        max_length=30,
+        choices=Department.choices,
+        default=Department.HOUSEKEEPING,
+    )
+
+
+    estimated_duration_minutes = models.PositiveIntegerField(
+        default=5,
+    )
+
+
+    validation_rules = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Rules for completion validation.",
+    )
+
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "sequence",
+        ]
+
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "checklist",
+                    "sequence",
+                ],
+                name="uq_cleaning_item_checklist_sequence",
+            ),
+
+            models.UniqueConstraint(
+                fields=[
+                    "checklist",
+                    "name",
+                ],
+                name="uq_cleaning_item_checklist_name",
+            ),
+
+        ]
+
+
+        indexes = [
+
+            models.Index(
+                fields=[
+                    "checklist",
+                    "sequence",
+                ],
+                name="idx_cleaning_item_order",
+            ),
+
+            models.Index(
+                fields=["department",],
+                name="idx_cleaning_item_department",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.checklist.name} - "
+            f"{self.sequence}. {self.name}"
+        )

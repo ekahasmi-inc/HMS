@@ -7,6 +7,7 @@ from .models import (
     MaintenanceRequest,
     MaintenanceLog,
     CleaningChecklist,
+    CleaningChecklistItem,
 )
 
 
@@ -188,6 +189,44 @@ class CleaningChecklistAdmin(admin.ModelAdmin):
     search_fields = (
         "name",
         "description",
+    )
+
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(CleaningChecklistItem)
+class CleaningChecklistItemAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "checklist",
+        "sequence",
+        "department",
+        "is_mandatory",
+        "estimated_duration_minutes",
+    )
+
+
+    list_filter = (
+        "department",
+        "is_mandatory",
+    )
+
+
+    search_fields = (
+        "name",
+        "description",
+        "instructions",
+    )
+
+
+    ordering = (
+        "checklist",
+        "sequence",
     )
 
 
