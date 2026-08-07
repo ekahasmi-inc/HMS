@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "apps.operations.booking",
     "apps.operations.inventory",
     "apps.operations.pricing",
+    "apps.operations.housekeeping"
 ]
 
 MIDDLEWARE = [
