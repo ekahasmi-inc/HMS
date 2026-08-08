@@ -6,8 +6,6 @@ from apps.platform.common.models import BaseModel
 from django.utils.text import slugify
 
 
-
-
 class Property(BaseModel):
     """
     Physical property owned by a tenant.
@@ -192,10 +190,6 @@ class Building(TimeStampedModel):
 
     def __str__(self):
         return f"{self.property.name} - {self.name}"
-
-from django.db import models
-
-from apps.platform.common.models import TimeStampedModel
 
 
 class Floor(TimeStampedModel):
@@ -443,8 +437,6 @@ class Room(TimeStampedModel):
 
     def __str__(self):
         return f"{self.property.name} - {self.room_number}"
-
-
 
 class Guest(TimeStampedModel):
     """
