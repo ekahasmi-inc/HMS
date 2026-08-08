@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 from apps.platform.common.models import TimeStampedModel
 from apps.operations.booking.models import Reservation, Property, Guest, Room, ReservationRoom
+from django.core.exceptions import ValidationError
 
 
 class CheckIn(TimeStampedModel):
@@ -186,4 +187,142 @@ class RoomAssignment(TimeStampedModel):
         return (
             f"{self.reservation_room} → "
             f"{self.room}"
+        )
+
+
+
+class RoomMove(TimeStampedModel):
+    """
+    Records an operational movement of a reservation from one
+    physical room to another.
+
+    RoomAssignment remains the source of truth for room allocation.
+    RoomMove records the operational event/change.
+    """
+    class MoveReason(models.TextChoices):
+        GUEST_REQUEST = "guest_request", "Guest Request"
+        MAINTENANCE = "maintenance", "Maintenance"
+        ROOM_UNAVAILABLE = "room_unavailable", "Room Unavailable"
+        UPGRADE = "upgrade", "Upgrade"
+        DOWNGRADE = "downgrade", "Downgrade"
+        OPERATIONAL = "operational", "Operational"
+        OVERBOOKING = "overbooking", "Overbooking"
+        HOUSEKEEPING = "housekeeping", "Housekeeping"
+        OTHER = "other", "Other"
+
+    class ChangeType(models.TextChoices):
+        SAME_CATEGORY = "same_category", "Same Category"
+        UPGRADE = "upgrade", "Upgrade"
+        DOWNGRADE = "downgrade", "Downgrade"
+
+    class InitiatedBy(models.TextChoices):
+        GUEST = "guest", "Guest"
+        STAFF = "staff", "Staff"
+        SYSTEM = "system", "System"
+        AI = "ai", "AI Assisted"
+
+    class Status(models.TextChoices):
+        REQUESTED = "requested", "Requested"
+        APPROVED = "approved", "Approved"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name="room_moves",)
+    reservation_room = models.ForeignKey(ReservationRoom, on_delete=models.CASCADE, related_name="room_moves",)
+    previous_assignment = models.ForeignKey(RoomAssignment, on_delete=models.PROTECT, related_name="moves_from",)
+    new_assignment = models.ForeignKey(RoomAssignment, on_delete=models.PROTECT, related_name="moves_to",)
+    previous_room = models.ForeignKey(Room, on_delete=models.PROTECT, related_name="room_moves_from",)
+    new_room = models.ForeignKey(Room,on_delete=models.PROTECT, related_name="room_moves_to",)
+    initiated_by = models.CharField(max_length=20, choices=InitiatedBy.choices, default=InitiatedBy.STAFF,)
+    authorized_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="authorized_room_moves",)
+    status = models.CharField(max_length=20,choices=Status.choices,default=Status.REQUESTED,)
+    reason = models.CharField(max_length=30, choices=MoveReason.choices, default=MoveReason.OPERATIONAL,)
+    change_type = models.CharField(max_length=30, choices=ChangeType.choices, default=ChangeType.SAME_CATEGORY,)
+    effective_at = models.DateTimeField(null=True, blank=True,)
+    requested_at = models.DateTimeField(auto_now_add=True,)
+    completed_at = models.DateTimeField(null=True, blank=True,)
+    notes = models.TextField(blank=True,)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["-effective_at", "-created_at",]
+
+        indexes = [
+            models.Index(
+                fields=["reservation", "status",],
+                name="idx_roommove_res_status",
+            ),
+            models.Index(
+                fields=["reservation_room", "effective_at",],
+                name="idx_roommove_resroom_date",
+            ),
+            models.Index(
+                fields=["previous_room", "effective_at",],
+                name="idx_roommove_prevroom_date",
+            ),
+            models.Index(
+                fields=["new_room", "effective_at",],
+                name="idx_roommove_newroom_date",
+            ),
+            models.Index(
+                fields=["status", "effective_at",],
+                name="idx_roommove_status_date",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+
+        if self.reservation_room:
+            if self.reservation_room.reservation_id != self.reservation_id:
+                errors["reservation_room"] = (
+                    "ReservationRoom must belong to the selected reservation."
+                )
+
+        if self.previous_assignment:
+            if (
+                self.previous_assignment.reservation_room_id
+                != self.reservation_room_id
+            ):
+                errors["previous_assignment"] = (
+                    "Previous assignment must belong to the selected ReservationRoom."
+                )
+
+        if self.new_assignment:
+            if (
+                self.new_assignment.reservation_room_id
+                != self.reservation_room_id
+            ):
+                errors["new_assignment"] = (
+                    "New assignment must belong to the selected ReservationRoom."
+                )
+
+        if self.previous_assignment and self.previous_room:
+            if self.previous_assignment.room_id != self.previous_room_id:
+                errors["previous_room"] = (
+                    "Previous room must match the previous assignment."
+                )
+
+        if self.new_assignment and self.new_room:
+            if self.new_assignment.room_id != self.new_room_id:
+                errors["new_room"] = (
+                    "New room must match the new assignment."
+                )
+
+        if (
+            self.previous_room_id
+            and self.new_room_id
+            and self.previous_room_id == self.new_room_id
+        ):
+            errors["new_room"] = (
+                "New room must be different from the previous room."
+            )
+
+        if errors:
+           raise ValidationError(errors)
+        
+    def __str__(self):
+        return (
+            f"{self.reservation_room} - "
+            f"{self.previous_room} → {self.new_room}"
         )

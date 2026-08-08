@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CheckIn, CheckOut, RoomAssignment
+from .models import CheckIn, CheckOut, RoomAssignment,RoomMove
 
 @admin.register(CheckIn)
 class CheckInAdmin(admin.ModelAdmin):
@@ -106,5 +106,58 @@ class RoomAssignmentAdmin(admin.ModelAdmin):
 
     ordering = (
         "-assigned_at",
+        "-created_at",
+    )
+
+
+@admin.register(RoomMove)
+class RoomMoveAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "reservation",
+        "reservation_room",
+        "previous_room",
+        "new_room",
+        "status",
+        "reason",
+        "change_type",
+        "initiated_by",
+        "effective_at",
+        "authorized_by",
+    )
+
+    list_filter = (
+        "status",
+        "reason",
+        "change_type",
+        "initiated_by",
+    )
+
+    search_fields = (
+        "reservation__booking_number",
+        "previous_room__name",
+        "new_room__name",
+        "notes",
+    )
+
+    autocomplete_fields = (
+        "reservation",
+        "reservation_room",
+        "previous_assignment",
+        "new_assignment",
+        "previous_room",
+        "new_room",
+        "authorized_by",
+    )
+
+    readonly_fields = (
+        "requested_at",
+        "completed_at",
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "-effective_at",
         "-created_at",
     )
