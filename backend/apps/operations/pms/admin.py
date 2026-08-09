@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CheckIn, CheckOut, RoomAssignment,RoomMove
+from .models import CheckIn, CheckOut, RoomAssignment,RoomMove, GuestDocument,KeyCard
 
 @admin.register(CheckIn)
 class CheckInAdmin(admin.ModelAdmin):
@@ -21,9 +21,10 @@ class CheckInAdmin(admin.ModelAdmin):
 
 
     search_fields = (
-        "reservation__booking_number",
-        "guest__first_name",
-        "guest__last_name",
+        "document_number",
+        "guest__name",
+        "guest__email",
+        "guest__phone",
     )
 
 
@@ -159,5 +160,98 @@ class RoomMoveAdmin(admin.ModelAdmin):
 
     ordering = (
         "-effective_at",
+        "-created_at",
+    )
+
+
+@admin.register(GuestDocument)
+class GuestDocumentAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "guest",
+        "document_type",
+        "document_number",
+        "issuing_country",
+        "verification_status",
+        "expiry_date",
+        "verified_at",
+        "verified_by",
+    )
+
+    list_filter = (
+        "document_type",
+        "verification_status",
+        "issuing_country",
+    )
+
+    search_fields = (
+        "document_number",
+        "guest__first_name",
+        "guest__last_name",
+        "guest__email",
+        "guest__phone",
+    )
+
+    autocomplete_fields = (
+        "guest",
+        "verified_by",
+        "media_reference",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "-created_at",
+    )
+
+
+
+@admin.register(KeyCard)
+class KeyCardAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "credential_number",
+        "card_type",
+        "guest",
+        "reservation",
+        "room",
+        "status",
+        "issued_at",
+        "expires_at",
+        "issued_by",
+    )
+
+    list_filter = (
+        "card_type",
+        "status",
+    )
+
+    search_fields = (
+        "credential_number",
+        "guest__name",
+        "guest__email",
+        "reservation__booking_number",
+        "room__name",
+    )
+
+    autocomplete_fields = (
+        "reservation",
+        "guest",
+        "check_in",
+        "room",
+        "issued_by",
+        "returned_by",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "-issued_at",
         "-created_at",
     )

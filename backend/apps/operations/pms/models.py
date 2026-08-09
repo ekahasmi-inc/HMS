@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 from apps.platform.common.models import TimeStampedModel
 from apps.operations.booking.models import Reservation, Property, Guest, Room, ReservationRoom
+from apps.experience.assets.models import MediaReference
 from django.core.exceptions import ValidationError
 
 
@@ -326,3 +327,404 @@ class RoomMove(TimeStampedModel):
             f"{self.reservation_room} - "
             f"{self.previous_room} → {self.new_room}"
         )
+
+
+class GuestDocument(TimeStampedModel):
+    """
+    Identity document belonging to a guest.
+
+    GuestDocument stores document metadata and verification state.
+    Actual document files are referenced through MediaReference.
+    """
+
+    class DocumentType(models.TextChoices):
+        PASSPORT = "passport", "Passport"
+        AADHAAR = "aadhaar", "Aadhaar"
+        PAN = "pan", "PAN"
+        DRIVING_LICENSE = "driving_license", "Driving License"
+        VOTER_ID = "voter_id", "Voter ID"
+        NATIONAL_ID = "national_id", "National ID"
+        OTHER = "other", "Other"
+
+    class VerificationStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        VERIFIED = "verified", "Verified"
+        REJECTED = "rejected", "Rejected"
+        EXPIRED = "expired", "Expired"
+
+    guest = models.ForeignKey(
+        Guest,
+        on_delete=models.CASCADE,
+        related_name="documents",
+    )
+
+    document_type = models.CharField(
+        max_length=30,
+        choices=DocumentType.choices,
+    )
+
+    document_number = models.CharField(
+        max_length=100,
+    )
+
+    issuing_country = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    issue_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    expiry_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VerificationStatus.choices,
+        default=VerificationStatus.PENDING,
+    )
+
+    verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="guest_documents_verified",
+    )
+
+    media_reference = models.ForeignKey(
+        MediaReference,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="guest_documents",
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    notes = models.TextField(
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-created_at",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "guest",
+                    "document_type",
+                    "document_number",
+                ],
+                name="uq_guest_document_identity",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "guest",
+                    "document_type",
+                ],
+                name="idx_guestdoc_guest_type",
+            ),
+
+            models.Index(
+                fields=[
+                    "guest",
+                    "verification_status",
+                ],
+                name="idx_guestdoc_guest_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "document_number",
+                ],
+                name="idx_guestdoc_number",
+            ),
+
+            models.Index(
+                fields=[
+                    "expiry_date",
+                ],
+                name="idx_guestdoc_expiry",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+
+        if (
+            self.issue_date
+            and self.expiry_date
+            and self.expiry_date < self.issue_date
+        ):
+            errors["expiry_date"] = (
+                "Expiry date cannot be earlier than issue date."
+            )
+
+        if (
+            self.verification_status
+            == self.VerificationStatus.VERIFIED
+            and not self.verified_at
+        ):
+            errors["verified_at"] = (
+                "Verified timestamp is required for verified documents."
+            )
+
+        if (
+            self.verification_status
+            == self.VerificationStatus.VERIFIED
+            and not self.verified_by
+        ):
+            errors["verified_by"] = (
+                "Verified by is required for verified documents."
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self):
+        return (
+            f"{self.guest} - "
+            f"{self.get_document_type_display()} - "
+            f"{self.document_number}"
+        )
+
+
+class KeyCard(TimeStampedModel):
+    """
+    Represents a physical or electronic room-access credential.
+
+    KeyCard belongs to the PMS access layer and does not contain
+    reservation pricing, payment, or booking logic.
+    """
+
+    class CardType(models.TextChoices):
+        PHYSICAL = "physical", "Physical Card"
+        RFID = "rfid", "RFID Card"
+        NFC = "nfc", "NFC Credential"
+        MOBILE = "mobile", "Mobile Key"
+        DIGITAL = "digital", "Digital Credential"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        ISSUED = "issued", "Issued"
+        ACTIVE = "active", "Active"
+        EXPIRED = "expired", "Expired"
+        RETURNED = "returned", "Returned"
+        DEACTIVATED = "deactivated", "Deactivated"
+        LOST = "lost", "Lost"
+        DAMAGED = "damaged", "Damaged"
+        CANCELLED = "cancelled", "Cancelled"
+
+    reservation = models.ForeignKey(
+        Reservation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="key_cards",
+    )
+
+    guest = models.ForeignKey(
+        Guest,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="key_cards",
+    )
+
+    check_in = models.ForeignKey(
+        CheckIn,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="key_cards",
+    )
+
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="key_cards",
+    )
+
+    credential_number = models.CharField(
+        max_length=100,
+        unique=True,
+    )
+
+    card_type = models.CharField(
+        max_length=20,
+        choices=CardType.choices,
+        default=CardType.PHYSICAL,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ISSUED,
+    )
+
+    issued_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    activated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    deactivated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    returned_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    issued_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="key_cards_issued",
+    )
+
+    returned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="key_cards_returned",
+    )
+
+    notes = models.TextField(
+        blank=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-issued_at",
+            "-created_at",
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "reservation",
+                    "status",
+                ],
+                name="idx_keycard_res_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "guest",
+                    "status",
+                ],
+                name="idx_keycard_guest_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "room",
+                    "status",
+                ],
+                name="idx_keycard_room_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "check_in",
+                ],
+                name="idx_keycard_checkin",
+            ),
+
+            models.Index(
+                fields=[
+                    "status",
+                    "expires_at",
+                ],
+                name="idx_keycard_status_expiry",
+            ),
+        ]
+
+    def clean(self):
+        errors = {}
+
+        if self.expires_at and self.issued_at:
+            if self.expires_at < self.issued_at:
+                errors["expires_at"] = (
+                    "Expiry time cannot be earlier than issue time."
+                )
+
+        if self.activated_at and self.issued_at:
+            if self.activated_at < self.issued_at:
+                errors["activated_at"] = (
+                    "Activation time cannot be earlier than issue time."
+                )
+
+        if self.returned_at and self.issued_at:
+            if self.returned_at < self.issued_at:
+                errors["returned_at"] = (
+                    "Return time cannot be earlier than issue time."
+                )
+
+        if (
+            self.status == self.Status.RETURNED
+            and not self.returned_at
+        ):
+            errors["returned_at"] = (
+                "Returned timestamp is required for returned cards."
+            )
+
+        if (
+            self.status == self.Status.DEACTIVATED
+            and not self.deactivated_at
+        ):
+            errors["deactivated_at"] = (
+                "Deactivation timestamp is required for deactivated cards."
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self):
+        if self.room:
+            room_display = (
+                f"{self.room.room_number} - {self.room.room_name}"
+            )
+        else:
+            room_display = "Unassigned Room"
+
+        return f"{self.credential_number} - {room_display}"
