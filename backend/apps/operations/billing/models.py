@@ -495,3 +495,107 @@ class TaxLine(TimeStampedModel):
             f"{self.tax_name} - "
             f"{self.tax_amount} {self.currency}"
         )
+
+
+class Discount(TimeStampedModel):
+    """
+    Financial discount snapshot applied to a FolioItem.
+
+    Discount stores the resulting financial adjustment.
+    Calculation logic belongs to BillingService/PricingService.
+    """
+
+    class DiscountType(models.TextChoices):
+        PERCENTAGE = "percentage", "Percentage"
+        FIXED = "fixed", "Fixed Amount"
+        EARLY_BIRD = "early_bird", "Early Bird"
+        LONG_STAY = "long_stay", "Long Stay"
+        CORPORATE = "corporate", "Corporate"
+        MEMBER = "member", "Member"
+        COUPON = "coupon", "Coupon"
+        SEASONAL = "seasonal", "Seasonal"
+        PROMOTIONAL = "promotional", "Promotional"
+        MANUAL = "manual", "Manual"
+        OTHER = "other", "Other"
+
+    folio_item = models.ForeignKey(
+        FolioItem,
+        on_delete=models.CASCADE,
+        related_name="discounts",
+    )
+
+    discount_type = models.CharField(
+        max_length=30,
+        choices=DiscountType.choices,
+        default=DiscountType.MANUAL,
+    )
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    base_amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+    )
+
+    discount_rate = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text="Percentage discount rate, if applicable.",
+    )
+
+    discount_amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="INR",
+    )
+
+    source_type = models.CharField(
+        max_length=50,
+        blank=True,
+    )
+
+    source_reference = models.CharField(
+        max_length=200,
+        blank=True,
+    )
+
+    reason = models.TextField(
+        blank=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ["id"]
+
+        indexes = [
+            models.Index(
+                fields=["folio_item", "discount_type"],
+                name="idx_discount_item_type",
+            ),
+            models.Index(
+                fields=["folio_item", "name"],
+                name="idx_discount_item_name",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.name} - "
+            f"{self.discount_amount} {self.currency}"
+        )

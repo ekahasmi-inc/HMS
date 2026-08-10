@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Folio, FolioItem, Charge, TaxLine
+from .models import Folio, FolioItem, Charge, TaxLine, Discount
 
 
 @admin.register(Folio)
@@ -183,4 +183,38 @@ class TaxLineAdmin(admin.ModelAdmin):
     ordering = (
         "tax_type",
         "tax_name",
+    )
+
+
+
+@admin.register(Discount)
+class DiscountAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "folio_item",
+        "discount_type",
+        "base_amount",
+        "discount_rate",
+        "discount_amount",
+        "currency",
+        "source_type",
+    )
+
+    list_filter = (
+        "discount_type",
+        "currency",
+        "source_type",
+    )
+
+    search_fields = (
+        "name",
+        "description",
+        "source_reference",
+        "folio_item__description",
+        "folio_item__folio__folio_number",
+    )
+
+    ordering = (
+        "folio_item",
+        "id",
     )
