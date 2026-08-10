@@ -439,3 +439,59 @@ class Charge(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+
+class TaxLine(TimeStampedModel):
+    """
+    Immutable tax snapshot attached to a FolioItem.
+
+    TaxLine stores the tax that was actually applied to a
+    financial line item. Tax calculation itself belongs to
+    the future BillingService.
+    """
+    class TaxType(models.TextChoices):
+        GST = "gst", "GST"
+        CGST = "cgst", "CGST"
+        SGST = "sgst", "SGST"
+        IGST = "igst", "IGST"
+        UTGST = "utgst", "UTGST"
+        CESS = "cess", "Cess"
+        SERVICE_TAX = "service_tax", "Service Tax"
+        OTHER = "other", "Other"
+
+    folio_item = models.ForeignKey("FolioItem", on_delete=models.PROTECT, related_name="tax_lines",)
+    tax_type = models.CharField(max_length=30, choices=TaxType.choices,)
+    tax_name = models.CharField(max_length=100,)
+    tax_rate = models.DecimalField(max_digits=7, decimal_places=4, default=0,)
+    taxable_amount = models.DecimalField(max_digits=14, decimal_places=2,)
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=2,)
+    currency = models.CharField(max_length=3, default="INR",)
+    metadata = models.JSONField(default=dict, blank=True,)
+
+    class Meta:
+        ordering = ["tax_type", "tax_name",]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["folio_item", "tax_type", "tax_name",],
+                name="uq_taxline_item_type_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["folio_item","tax_type",],
+                name="idx_taxline_item_type",
+            ),
+            models.Index(
+                fields=["tax_name",],
+                name="idx_taxline_tax_name",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.tax_name} - "
+            f"{self.tax_amount} {self.currency}"
+        )

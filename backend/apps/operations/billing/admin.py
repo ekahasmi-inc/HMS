@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Folio, FolioItem, Charge
+from .models import Folio, FolioItem, Charge, TaxLine
 
 
 @admin.register(Folio)
@@ -142,4 +142,45 @@ class ChargeAdmin(admin.ModelAdmin):
     ordering = (
         "sort_order",
         "name",
+    )
+
+
+
+
+
+@admin.register(TaxLine)
+class TaxLineAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "folio_item",
+        "tax_type",
+        "tax_name",
+        "tax_rate",
+        "taxable_amount",
+        "tax_amount",
+        "currency",
+    )
+
+    list_filter = (
+        "tax_type",
+        "currency",
+    )
+
+    search_fields = (
+        "tax_name",
+        "folio_item__description",
+    )
+
+    autocomplete_fields = (
+        "folio_item",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "tax_type",
+        "tax_name",
     )
