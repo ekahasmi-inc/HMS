@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import OTAProvider
+from .models import OTAAccount, OTAProvider
 
 
 @admin.register(OTAProvider)
@@ -46,29 +46,70 @@ class OTAProviderAdmin(admin.ModelAdmin):
         "updated_at",
     )
 
+
+@admin.register(OTAAccount)
+class OTAAccountAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "tenant",
+        "provider",
+        "account_reference",
+        "account_email",
+        "status",
+        "connected_at",
+        "last_synced_at",
+        "created_at",
+    )
+
+    list_filter = (
+        "status",
+        "provider",
+        "connected_at",
+    )
+
+    search_fields = (
+        "name",
+        "account_reference",
+        "account_email",
+        "account_username",
+        "tenant__name",
+        "provider__name",
+    )
+
+    autocomplete_fields = (
+        "tenant",
+        "provider",
+    )
+
+    ordering = (
+        "tenant",
+        "provider",
+        "name",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
     fieldsets = (
         (
-            "Provider Identity",
+            "Account Identity",
             {
                 "fields": (
-                    "code",
+                    "tenant",
+                    "provider",
                     "name",
-                    "display_name",
-                    "provider_type",
-                    "description",
-                    "website_url",
+                    "account_reference",
                 )
             },
         ),
         (
-            "Capabilities",
+            "Account Contact",
             {
                 "fields": (
-                    "api_supported",
-                    "webhook_supported",
-                    "reservation_sync_supported",
-                    "availability_sync_supported",
-                    "rate_sync_supported",
+                    "account_email",
+                    "account_username",
                 )
             },
         ),
@@ -77,7 +118,8 @@ class OTAProviderAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "status",
-                    "sort_order",
+                    "connected_at",
+                    "last_synced_at",
                 )
             },
         ),
