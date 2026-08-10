@@ -741,3 +741,129 @@ class FolioPayment(TimeStampedModel):
             f"{self.payment_type} - "
             f"{self.amount} {self.currency}"
         )
+
+
+
+class FolioAdjustment(TimeStampedModel):
+    """
+    Financial adjustment recorded against a guest folio.
+
+    This model stores the adjustment snapshot only.
+    Adjustment approval, balance calculation, and business rules
+    belong to future billing services.
+    """
+
+    class AdjustmentType(models.TextChoices):
+        CREDIT = "credit", "Manual Credit"
+        DEBIT = "debit", "Manual Debit"
+        ROUNDING = "rounding", "Rounding Adjustment"
+        COMPLIMENTARY = "complimentary", "Complimentary"
+        WAIVER = "waiver", "Waiver"
+        REFUND = "refund", "Refund Adjustment"
+        CORRECTION = "correction", "Correction"
+        WRITE_OFF = "write_off", "Write-off"
+        CANCELLATION = "cancellation", "Cancellation Adjustment"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        POSTED = "posted", "Posted"
+        REJECTED = "rejected", "Rejected"
+        CANCELLED = "cancelled", "Cancelled"
+
+    folio = models.ForeignKey(
+        Folio,
+        on_delete=models.CASCADE,
+        related_name="adjustments",
+    )
+
+    adjustment_type = models.CharField(
+        max_length=30,
+        choices=AdjustmentType.choices,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+    amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="INR",
+    )
+
+    reason = models.CharField(
+        max_length=255,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    reference = models.CharField(
+        max_length=200,
+        blank=True,
+    )
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_folio_adjustments",
+    )
+
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    posted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+        indexes = [
+            models.Index(
+                fields=["folio", "status"],
+                name="idx_folioadj_folio_status",
+            ),
+            models.Index(
+                fields=["folio", "adjustment_type"],
+                name="idx_folioadj_folio_type",
+            ),
+            models.Index(
+                fields=["status"],
+                name="idx_folioadj_status",
+            ),
+            models.Index(
+                fields=["approved_by"],
+                name="idx_folioadj_approved_by",
+            ),
+            models.Index(
+                fields=["posted_at"],
+                name="idx_folioadj_posted_at",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.folio.folio_number} - "
+            f"{self.adjustment_type} - "
+            f"{self.amount} {self.currency}"
+        )

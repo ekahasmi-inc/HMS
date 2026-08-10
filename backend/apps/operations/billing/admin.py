@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Folio, FolioItem, Charge, TaxLine, Discount, FolioPayment
+from .models import Folio, FolioItem, Charge, TaxLine, Discount, FolioPayment, FolioAdjustment
 
 
 @admin.register(Folio)
@@ -247,6 +247,44 @@ class FolioPaymentAdmin(admin.ModelAdmin):
         "gateway_transaction_id",
         "folio__folio_number",
         "folio__reservation__booking_number",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "-created_at",
+    )
+
+
+
+@admin.register(FolioAdjustment)
+class FolioAdjustmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "folio",
+        "adjustment_type",
+        "status",
+        "amount",
+        "currency",
+        "reason",
+        "approved_by",
+        "approved_at",
+        "posted_at",
+    )
+
+    list_filter = (
+        "adjustment_type",
+        "status",
+        "currency",
+    )
+
+    search_fields = (
+        "reason",
+        "description",
+        "reference",
+        "folio__folio_number",
     )
 
     readonly_fields = (
