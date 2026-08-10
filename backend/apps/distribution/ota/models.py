@@ -297,3 +297,128 @@ class OTAAccount(TimeStampedModel):
 
     def __str__(self):
         return f"{self.tenant} - {self.provider.name} - {self.name}"
+
+
+
+
+class OTAConnection(TimeStampedModel):
+    """
+    Technical connection definition between a tenant OTA account
+    and the external OTA provider.
+
+    This model stores connection configuration and operational state.
+    Credentials and secrets must remain outside this model.
+    """
+
+    class ConnectionType(models.TextChoices):
+        API = "api", "API"
+        WEBHOOK = "webhook", "Webhook"
+        API_WEBHOOK = "api_webhook", "API + Webhook"
+        SFTP = "sftp", "SFTP"
+        OTHER = "other", "Other"
+
+    class Environment(models.TextChoices):
+        PRODUCTION = "production", "Production"
+        SANDBOX = "sandbox", "Sandbox"
+        TEST = "test", "Test"
+
+    class ConnectionStatus(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+        CONNECTING = "connecting", "Connecting"
+        ERROR = "error", "Error"
+        SUSPENDED = "suspended", "Suspended"
+
+    ota_account = models.ForeignKey(
+        "OTAAccount",
+        on_delete=models.CASCADE,
+        related_name="connections",
+    )
+
+    name = models.CharField(
+        max_length=150,
+    )
+
+    connection_type = models.CharField(
+        max_length=30,
+        choices=ConnectionType.choices,
+        default=ConnectionType.API,
+    )
+
+    environment = models.CharField(
+        max_length=30,
+        choices=Environment.choices,
+        default=Environment.PRODUCTION,
+    )
+
+    endpoint = models.URLField(
+        max_length=500,
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=ConnectionStatus.choices,
+        default=ConnectionStatus.INACTIVE,
+    )
+
+    sync_enabled = models.BooleanField(
+        default=True,
+    )
+
+    sync_configuration = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    last_connected_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "ota_account",
+            "name",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "ota_account",
+                    "name",
+                ],
+                name="uq_ota_connection_account_name",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "ota_account",
+                    "status",
+                ],
+                name="idx_ota_conn_account_status",
+            ),
+            models.Index(
+                fields=[
+                    "ota_account",
+                    "environment",
+                ],
+                name="idx_ota_conn_account_env",
+            ),
+            models.Index(
+                fields=[
+                    "status",
+                ],
+                name="idx_ota_conn_status",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.ota_account} - {self.name}"

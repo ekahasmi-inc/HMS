@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import OTAAccount, OTAProvider
+from .models import OTAAccount, OTAProvider,OTAConnection
 
 
 @admin.register(OTAProvider)
@@ -140,4 +140,41 @@ class OTAAccountAdmin(admin.ModelAdmin):
                 )
             },
         ),
+    )
+
+
+
+@admin.register(OTAConnection)
+class OTAConnectionAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "ota_account",
+        "connection_type",
+        "environment",
+        "status",
+        "sync_enabled",
+        "last_connected_at",
+    )
+
+    list_filter = (
+        "connection_type",
+        "environment",
+        "status",
+        "sync_enabled",
+    )
+
+    search_fields = (
+        "name",
+        "ota_account__name",
+        "ota_account__ota_provider__name",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "ota_account",
+        "name",
     )
