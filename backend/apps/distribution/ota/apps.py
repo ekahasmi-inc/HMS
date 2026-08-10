@@ -2,5 +2,7 @@ from django.apps import AppConfig
 
 
 class OtaConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'ota'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.distribution.ota"
+    label = "ota"
+    verbose_name = "OTA"

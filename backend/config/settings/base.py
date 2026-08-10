@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "apps.operations.housekeeping",
     'apps.operations.pms',
     'apps.operations.billing',
+    "apps.distribution.ota",
 ]
 
 MIDDLEWARE = [
