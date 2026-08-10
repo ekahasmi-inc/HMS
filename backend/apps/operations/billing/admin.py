@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Folio, FolioItem, Charge, TaxLine, Discount
+from .models import Folio, FolioItem, Charge, TaxLine, Discount, FolioPayment
 
 
 @admin.register(Folio)
@@ -217,4 +217,43 @@ class DiscountAdmin(admin.ModelAdmin):
     ordering = (
         "folio_item",
         "id",
+    )
+
+
+@admin.register(FolioPayment)
+class FolioPaymentAdmin(admin.ModelAdmin):
+    list_display = (
+        "folio",
+        "payment_type",
+        "payment_method",
+        "status",
+        "amount",
+        "currency",
+        "paid_at",
+        "received_by",
+    )
+
+    list_filter = (
+        "payment_type",
+        "payment_method",
+        "status",
+        "currency",
+    )
+
+    search_fields = (
+        "payment_reference",
+        "gateway_name",
+        "gateway_order_id",
+        "gateway_transaction_id",
+        "folio__folio_number",
+        "folio__reservation__booking_number",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "-created_at",
     )

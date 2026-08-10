@@ -599,3 +599,145 @@ class Discount(TimeStampedModel):
             f"{self.name} - "
             f"{self.discount_amount} {self.currency}"
         )
+
+
+
+class FolioPayment(TimeStampedModel):
+    """
+    Payment transaction applied against a guest folio.
+
+    This model stores the financial payment snapshot.
+    Payment processing and gateway interaction belong to
+    future PaymentService/BillingService layers.
+    """
+
+    class PaymentType(models.TextChoices):
+        PAYMENT = "payment", "Payment"
+        REFUND = "refund", "Refund"
+        ADJUSTMENT = "adjustment", "Adjustment"
+
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Cash"
+        CARD = "card", "Card"
+        UPI = "upi", "UPI"
+        BANK_TRANSFER = "bank_transfer", "Bank Transfer"
+        ONLINE_GATEWAY = "online_gateway", "Online Gateway"
+        CHEQUE = "cheque", "Cheque"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        SUCCESS = "success", "Success"
+        FAILED = "failed", "Failed"
+        CANCELLED = "cancelled", "Cancelled"
+        REFUNDED = "refunded", "Refunded"
+        PARTIALLY_REFUNDED = "partially_refunded", "Partially Refunded"
+
+    folio = models.ForeignKey(
+        Folio,
+        on_delete=models.CASCADE,
+        related_name="payments",
+    )
+
+    payment_type = models.CharField(
+        max_length=20,
+        choices=PaymentType.choices,
+        default=PaymentType.PAYMENT,
+    )
+
+    payment_method = models.CharField(
+        max_length=30,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.CASH,
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+    amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="INR",
+    )
+
+    payment_reference = models.CharField(
+        max_length=200,
+        blank=True,
+    )
+
+    gateway_name = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    gateway_order_id = models.CharField(
+        max_length=200,
+        blank=True,
+    )
+
+    gateway_transaction_id = models.CharField(
+        max_length=200,
+        blank=True,
+    )
+
+    paid_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    received_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="received_folio_payments",
+    )
+
+    notes = models.TextField(
+        blank=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+        indexes = [
+            models.Index(
+                fields=["folio", "status"],
+                name="idx_foliopayment_folio_status",
+            ),
+            models.Index(
+                fields=["folio", "payment_type"],
+                name="idx_foliopayment_folio_type",
+            ),
+            models.Index(
+                fields=["payment_method"],
+                name="idx_foliopayment_method",
+            ),
+            models.Index(
+                fields=["gateway_transaction_id"],
+                name="idx_foliopayment_gateway_tx",
+            ),
+            models.Index(
+                fields=["paid_at"],
+                name="idx_foliopayment_paid_at",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.folio.folio_number} - "
+            f"{self.payment_type} - "
+            f"{self.amount} {self.currency}"
+        )
