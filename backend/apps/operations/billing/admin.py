@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Folio
+from .models import Folio, FolioItem
 
 
 @admin.register(Folio)
@@ -48,4 +48,52 @@ class FolioAdmin(admin.ModelAdmin):
 
     ordering = (
         "-created_at",
+    )
+
+
+@admin.register(FolioItem)
+class FolioItemAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "folio",
+        "item_type",
+        "description",
+        "quantity",
+        "unit_price",
+        "amount",
+        "currency",
+        "service_date",
+        "status",
+        "source_type",
+        "source_reference",
+    )
+
+    list_filter = (
+        "item_type",
+        "status",
+        "currency",
+        "service_date",
+    )
+
+    search_fields = (
+        "folio__folio_number",
+        "description",
+        "source_type",
+        "source_reference",
+    )
+
+    autocomplete_fields = (
+        "tenant",
+        "folio",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "service_date",
+        "sort_order",
+        "created_at",
     )

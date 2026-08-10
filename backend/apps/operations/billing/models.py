@@ -137,3 +137,156 @@ class Folio(TimeStampedModel):
         ]
     def __str__(self):
         return f"{self.folio_number} - {self.guest}"
+
+
+
+class FolioItem(TimeStampedModel):
+    """
+    Individual billable financial line belonging to a Folio.
+
+    FolioItem stores the financial line record only.
+    Tax calculation, discount calculation, payment processing,
+    posting and other business rules belong to future services.
+    """
+
+    class ItemType(models.TextChoices):
+        ROOM = "room", "Room Charge"
+        RESTAURANT = "restaurant", "Restaurant"
+        EXTRA_BED = "extra_bed", "Extra Bed"
+        MINIBAR = "minibar", "Minibar"
+        ACTIVITY = "activity", "Activity"
+        TRANSFER = "transfer", "Transfer"
+        SERVICE = "service", "Service Fee"
+        LAUNDRY = "laundry", "Laundry"
+        SPA = "spa", "Spa"
+        EVENT = "event", "Event"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        POSTED = "posted", "Posted"
+        VOID = "void", "Void"
+        PENDING = "pending", "Pending"
+
+    tenant = models.ForeignKey(
+        "tenants.Tenant",
+        on_delete=models.CASCADE,
+        related_name="folio_items",
+    )
+
+    folio = models.ForeignKey(
+        Folio,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+
+    item_type = models.CharField(
+        max_length=30,
+        choices=ItemType.choices,
+        default=ItemType.OTHER,
+    )
+
+    description = models.CharField(
+        max_length=255,
+    )
+
+    quantity = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        default=1,
+    )
+
+    unit_price = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0,
+    )
+
+    amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0,
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="INR",
+    )
+
+    service_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    posted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.POSTED,
+    )
+
+    source_type = models.CharField(
+        max_length=50,
+        blank=True,
+    )
+
+    source_reference = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    sort_order = models.PositiveIntegerField(
+        default=0,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "service_date",
+            "sort_order",
+            "created_at",
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "tenant",
+                    "folio",
+                ],
+                name="idx_folioitem_tenant_folio",
+            ),
+
+            models.Index(
+                fields=[
+                    "folio",
+                    "item_type",
+                ],
+                name="idx_folioitem_folio_type",
+            ),
+
+            models.Index(
+                fields=[
+                    "folio",
+                    "service_date",
+                ],
+                name="idx_folioitem_folio_date",
+            ),
+
+            models.Index(
+                fields=[
+                    "tenant",
+                    "status",
+                ],
+                name="idx_folioitem_tenant_status",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.folio.folio_number} - {self.description}"
