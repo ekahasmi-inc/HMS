@@ -290,3 +290,152 @@ class FolioItem(TimeStampedModel):
 
     def __str__(self):
         return f"{self.folio.folio_number} - {self.description}"
+
+
+
+class Charge(TimeStampedModel):
+    """
+    Standardized charge definition used by the billing layer.
+
+    Charge defines what can be charged.
+    Actual guest-level financial postings belong to FolioItem.
+    """
+
+    class ChargeType(models.TextChoices):
+        ROOM = "room", "Room Tariff"
+        RESTAURANT = "restaurant", "Restaurant"
+        EXTRA_BED = "extra_bed", "Extra Bed"
+        MINIBAR = "minibar", "Minibar"
+        LAUNDRY = "laundry", "Laundry"
+        SPA = "spa", "Spa"
+        TRANSFER = "transfer", "Transfer"
+        SERVICE = "service", "Service Charge"
+        CANCELLATION = "cancellation", "Cancellation Fee"
+        EARLY_CHECKIN = "early_checkin", "Early Check-in"
+        LATE_CHECKOUT = "late_checkout", "Late Checkout"
+        ACTIVITY = "activity", "Activity"
+        EVENT = "event", "Event"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INACTIVE = "inactive", "Inactive"
+
+    tenant = models.ForeignKey(
+        "tenants.Tenant",
+        on_delete=models.CASCADE,
+        related_name="charges",
+    )
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+    slug = models.SlugField(
+        max_length=200,
+    )
+
+    code = models.CharField(
+        max_length=50,
+        blank=True,
+    )
+
+    charge_type = models.CharField(
+        max_length=30,
+        choices=ChargeType.choices,
+        default=ChargeType.OTHER,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    default_amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0,
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="INR",
+    )
+
+    unit = models.CharField(
+        max_length=30,
+        default="unit",
+    )
+
+    taxable = models.BooleanField(
+        default=True,
+    )
+
+    active = models.BooleanField(
+        default=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
+
+    sort_order = models.PositiveIntegerField(
+        default=0,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "sort_order",
+            "name",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "slug"],
+                name="uq_charge_tenant_slug",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "name"],
+                name="uq_charge_tenant_name",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "code"],
+                name="uq_charge_tenant_code",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["tenant", "charge_type"],
+                name="idx_charge_tenant_type",
+            ),
+            models.Index(
+                fields=["tenant", "status"],
+                name="idx_charge_tenant_status",
+            ),
+            models.Index(
+                fields=["tenant", "active"],
+                name="idx_charge_tenant_active",
+            ),
+            models.Index(
+                fields=["tenant", "sort_order"],
+                name="idx_charge_tenant_order",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+
+            self.slug = slugify(self.name)
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Folio, FolioItem
+from .models import Folio, FolioItem, Charge
 
 
 @admin.register(Folio)
@@ -96,4 +96,50 @@ class FolioItemAdmin(admin.ModelAdmin):
         "service_date",
         "sort_order",
         "created_at",
+    )
+
+
+@admin.register(Charge)
+class ChargeAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "code",
+        "charge_type",
+        "default_amount",
+        "currency",
+        "unit",
+        "taxable",
+        "active",
+        "status",
+        "sort_order",
+    )
+
+    list_filter = (
+        "charge_type",
+        "status",
+        "active",
+        "taxable",
+        "currency",
+    )
+
+    search_fields = (
+        "name",
+        "slug",
+        "code",
+        "description",
+    )
+
+    autocomplete_fields = (
+        "tenant",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = (
+        "sort_order",
+        "name",
     )
